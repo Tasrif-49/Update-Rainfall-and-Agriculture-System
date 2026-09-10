@@ -99,7 +99,7 @@ st.markdown(
 <style>
 
 /* =========================================================
-   FONTS
+   GOOGLE FONTS
 ========================================================= */
 
 @import url(
@@ -112,7 +112,6 @@ st.markdown(
 ========================================================= */
 
 :root {
-
     --bg: #F4F7FA;
     --card: #FFFFFF;
     --ink: #102A43;
@@ -125,7 +124,6 @@ st.markdown(
     --green: #2E8B57;
     --amber: #E8873A;
     --line: #D5DEE7;
-
 }
 
 
@@ -145,15 +143,12 @@ body,
         'Inter',
         'Noto Sans Bengali',
         sans-serif !important;
-
 }
 
 
 .stApp {
-
     background-color: var(--bg) !important;
     color: var(--text) !important;
-
 }
 
 
@@ -163,12 +158,9 @@ body,
 
 [data-testid="stMain"] p,
 [data-testid="stMain"] li {
-
     color: var(--text) !important;
-
 }
 
-/* Keep normal text readable without overriding Streamlit widget internals */
 [data-testid="stMain"] .stMarkdown,
 [data-testid="stMain"] .stMarkdown p,
 [data-testid="stMain"] .stMarkdown li {
@@ -193,7 +185,6 @@ body,
         sans-serif !important;
 
     font-weight: 700 !important;
-
 }
 
 
@@ -209,7 +200,6 @@ body,
     padding-bottom: 2rem !important;
     padding-left: 2rem !important;
     padding-right: 2rem !important;
-
 }
 
 
@@ -239,7 +229,6 @@ body,
         rgba(11, 29, 51, 0.16);
 
     margin-bottom: 1.8rem;
-
 }
 
 
@@ -252,7 +241,6 @@ body,
     line-height: 1.35 !important;
 
     margin-bottom: 0.7rem !important;
-
 }
 
 
@@ -265,7 +253,6 @@ body,
     line-height: 1.7 !important;
 
     margin-bottom: 0 !important;
-
 }
 
 
@@ -280,7 +267,6 @@ body,
     flex-wrap: wrap;
 
     margin-top: 1.8rem;
-
 }
 
 
@@ -290,7 +276,6 @@ body,
         4px solid #55D6C2;
 
     padding-left: 0.9rem;
-
 }
 
 
@@ -303,7 +288,6 @@ body,
     font-weight: 700 !important;
 
     line-height: 1.3 !important;
-
 }
 
 
@@ -315,7 +299,6 @@ body,
     font-size: 0.88rem !important;
 
     margin-top: 0.25rem !important;
-
 }
 
 
@@ -337,7 +320,6 @@ body,
 
     border-left:
         4px solid var(--teal);
-
 }
 
 
@@ -362,15 +344,12 @@ body,
     box-shadow:
         0 4px 15px
         rgba(15, 36, 54, 0.04);
-
 }
 
 
 .card p,
 .card span {
-
     color: var(--text) !important;
-
 }
 
 
@@ -400,7 +379,6 @@ body,
     padding: 1.4rem;
 
     margin-bottom: 1.2rem;
-
 }
 
 
@@ -408,17 +386,13 @@ body,
 .agri-card h2,
 .agri-card h3,
 .agri-card h4 {
-
     color: #176B3A !important;
-
 }
 
 
 .agri-card p {
-
     color: var(--text) !important;
     line-height: 1.7;
-
 }
 
 
@@ -445,23 +419,18 @@ body,
     padding: 1.5rem;
 
     margin-bottom: 1rem;
-
 }
 
 
 .result-card h1,
 .result-card h2,
 .result-card h3 {
-
     color: #176B3A !important;
-
 }
 
 
 .result-card p {
-
     color: #176B3A !important;
-
 }
 
 
@@ -472,46 +441,42 @@ body,
 [data-testid="stMain"] label {
 
     color: #102A43 !important;
-    -webkit-text-fill-color: #102A43 !important;
 
     font-weight: 600 !important;
+
     font-size: 0.95rem !important;
 
     opacity: 1 !important;
-
 }
 
 
 /* =========================================================
    GENERAL INPUT
+   IMPORTANT:
+   Do NOT force text-fill-color here.
+   This avoids interfering with Streamlit date inputs.
 ========================================================= */
 
-[data-testid="stMain"] input {
+[data-testid="stMain"] input:not([type="date"]) {
 
     background-color: #FFFFFF !important;
 
     color: #102A43 !important;
-    -webkit-text-fill-color: #102A43 !important;
 
     caret-color: #102A43 !important;
 
     border-color: #BFCBD5 !important;
 
     opacity: 1 !important;
-
 }
 
 
 /* =========================================================
    GENERAL BASE INPUT
-   Kept for normal inputs/selects.
-   NOT used for date inputs.
 ========================================================= */
 
 [data-baseweb="input"] {
-
     background-color: #FFFFFF !important;
-
 }
 
 
@@ -522,12 +487,10 @@ body,
 [data-testid="stNumberInput"] input {
 
     color: #102A43 !important;
-    -webkit-text-fill-color: #102A43 !important;
 
     background-color: #FFFFFF !important;
 
     opacity: 1 !important;
-
 }
 
 
@@ -540,540 +503,182 @@ body,
     background-color: #FFFFFF !important;
 
     color: #102A43 !important;
-    -webkit-text-fill-color: #102A43 !important;
-
 }
 
 
 /* =========================================================
-   SELECTBOX - COMPLETE VISIBILITY FIX
-   Works for:
-   - Prediction Station
-   - Agriculture Crop / Growth Stage / Soil Type
-   - Historical Station / Division
+   SELECTBOX
 ========================================================= */
 
-/* Entire Streamlit select widget */
 [data-testid="stSelectbox"] {
     opacity: 1 !important;
 }
 
-/* Selectbox label */
+
 [data-testid="stSelectbox"] label,
 [data-testid="stSelectbox"] label p,
 [data-testid="stSelectbox"] label span {
+
     color: #102A43 !important;
-    -webkit-text-fill-color: #102A43 !important;
+
     font-weight: 600 !important;
+
     opacity: 1 !important;
 }
 
-/* BaseWeb select root and visible control */
+
 [data-testid="stMain"] [data-baseweb="select"],
 [data-testid="stMain"] [data-baseweb="select"] > div {
+
     background-color: #FFFFFF !important;
+
     color: #102A43 !important;
-    -webkit-text-fill-color: #102A43 !important;
+
     border-color: #BFCBD5 !important;
+
     opacity: 1 !important;
 }
 
-/* Selected value and all visible select text */
+
 [data-testid="stMain"] [data-baseweb="select"] div,
 [data-testid="stMain"] [data-baseweb="select"] span,
 [data-testid="stMain"] [data-baseweb="select"] p,
 [data-testid="stMain"] [data-baseweb="select"] input {
+
     color: #102A43 !important;
-    -webkit-text-fill-color: #102A43 !important;
+
     opacity: 1 !important;
 }
 
-/* Search / selected value input */
+
 [data-testid="stMain"] [data-baseweb="select"] input {
+
     background-color: transparent !important;
+
     caret-color: #102A43 !important;
 }
 
-/* Placeholder */
+
 [data-testid="stMain"] [data-baseweb="select"] input::placeholder {
+
     color: #52616B !important;
-    -webkit-text-fill-color: #52616B !important;
+
     opacity: 1 !important;
 }
 
-/* Select arrow and icons */
+
 [data-testid="stMain"] [data-baseweb="select"] svg {
+
     color: #102A43 !important;
+
     fill: currentColor !important;
+
     stroke: currentColor !important;
+
     opacity: 1 !important;
 }
 
-/* Focus state */
+
 [data-testid="stMain"] [data-baseweb="select"]:focus-within > div {
+
     background-color: #FFFFFF !important;
+
     border-color: #168F87 !important;
 }
 
-/* Disabled selectbox: keep text readable */
-[data-testid="stMain"] [data-baseweb="select"][aria-disabled="true"],
-[data-testid="stMain"] [data-baseweb="select"][aria-disabled="true"] > div {
-    background-color: #F8FAFC !important;
-    color: #102A43 !important;
-    -webkit-text-fill-color: #102A43 !important;
-    opacity: 1 !important;
-}
-
-[data-testid="stMain"] [data-baseweb="select"][aria-disabled="true"] div,
-[data-testid="stMain"] [data-baseweb="select"][aria-disabled="true"] span,
-[data-testid="stMain"] [data-baseweb="select"][aria-disabled="true"] input {
-    color: #102A43 !important;
-    -webkit-text-fill-color: #102A43 !important;
-    opacity: 1 !important;
-}
 
 /* =========================================================
-   DROPDOWN MENU - COMPLETE VISIBILITY FIX
+   DROPDOWN MENU
 ========================================================= */
 
 [data-baseweb="popover"],
 [data-baseweb="menu"],
 [role="listbox"] {
+
     background-color: #FFFFFF !important;
+
     color: #102A43 !important;
 }
 
-/* Every dropdown option */
-[role="option"],
-[role="option"] *,
-[data-baseweb="menu"] *,
-[role="listbox"] * {
+
+[role="option"] {
+
+    background-color: #FFFFFF !important;
+
     color: #102A43 !important;
-    -webkit-text-fill-color: #102A43 !important;
+
     opacity: 1 !important;
 }
 
-[role="option"] {
-    background-color: #FFFFFF !important;
-}
 
 [role="option"]:hover,
 [role="option"][aria-selected="true"] {
+
     background-color: #E8F7F5 !important;
+
     color: #102A43 !important;
 }
 
-/* =========================================================
-   DISABLED INPUT VISIBILITY
-========================================================= */
-
-[data-testid="stMain"] input:disabled,
-[data-testid="stMain"] textarea:disabled {
-    background-color: #F8FAFC !important;
-    color: #102A43 !important;
-    -webkit-text-fill-color: #102A43 !important;
-    opacity: 1 !important;
-}
 
 /* =========================================================
    DATE INPUTS
-   STREAMLIT 1.63.0
-   ONLY:
-      1. prediction_date
-      2. historical_date_range
+   SAFE / MINIMAL CSS
+   IMPORTANT:
+   Do not style internal date segments.
 ========================================================= */
 
-
-/* ---------------------------------------------------------
-   PREDICTION DATE
---------------------------------------------------------- */
-
-.st-key-prediction_date {
-
-    width: 100% !important;
-
-    background: transparent !important;
-
-}
-
-
-/* Label */
-
-.st-key-prediction_date label,
-.st-key-prediction_date label p,
-.st-key-prediction_date label span {
-
-    color: #102A43 !important;
-
-    -webkit-text-fill-color:
-        #102A43 !important;
-
-    font-weight: 600 !important;
-
-    opacity: 1 !important;
-
-}
-
-
-/* Date widget containers */
-
-.st-key-prediction_date
-[data-testid="stDateInput"] {
-
-    background: transparent !important;
-
-}
-
-
-/* All possible internal wrappers */
-
-.st-key-prediction_date
-[data-testid="stDateInput"] > div {
-
-    background: transparent !important;
-
-}
-
-
-/* Actual visible field */
-
-.st-key-prediction_date
-[data-testid="stDateInput"] input {
-
-    background: #FFFFFF !important;
-
-    background-color: #FFFFFF !important;
-
-    color: #102A43 !important;
-
-    -webkit-text-fill-color:
-        #102A43 !important;
-
-    caret-color: #102A43 !important;
-
-    border:
-        1px solid #BFCBD5 !important;
-
-    border-radius: 8px !important;
-
-    opacity: 1 !important;
-
-}
-
-
-/* Date field ancestors */
-
-.st-key-prediction_date
-[data-testid="stDateInput"]
-div:has(input) {
-
-    background: #FFFFFF !important;
-
-}
-
-
-/* Calendar button */
-
-.st-key-prediction_date
-[data-testid="stDateInput"] button {
-
-    background: #FFFFFF !important;
-
-    color: #102A43 !important;
-
-    border: none !important;
-
-    box-shadow: none !important;
-
-}
-
-
-/* Calendar icon */
-
-.st-key-prediction_date
-[data-testid="stDateInput"] button svg {
-
-    color: #102A43 !important;
-
-    fill: currentColor !important;
-
-    stroke: currentColor !important;
-
-    opacity: 1 !important;
-
-}
-
-
-/* Focus */
-
-.st-key-prediction_date
-[data-testid="stDateInput"]:focus-within {
-
-    background: #FFFFFF !important;
-
-}
-
-/* ============================================================
-   HISTORICAL DATA - DATE RANGE
-   ============================================================ */
-
+.st-key-prediction_date,
 .st-key-historical_date_range {
+
     width: 100% !important;
 }
 
-.st-key-historical_date_range label,
-.st-key-historical_date_range label p,
-.st-key-historical_date_range label span {
-    color: #102A43 !important;
-    -webkit-text-fill-color: #102A43 !important;
-    font-weight: 600 !important;
-    opacity: 1 !important;
+
+/* Date box background only */
+
+.st-key-prediction_date [data-testid="stDateInput"] > div,
+.st-key-historical_date_range [data-testid="stDateInput"] > div {
+
+    background-color: #FFFFFF !important;
+
+    border-radius: 8px !important;
 }
 
-.st-key-historical_date_range [data-testid="stDateInput"] {
-    background: transparent !important;
-}
 
+/* Keep date text visible */
+
+.st-key-prediction_date [data-testid="stDateInput"] input,
 .st-key-historical_date_range [data-testid="stDateInput"] input {
-    background: #FFFFFF !important;
-    background-color: #FFFFFF !important;
-    color: #102A43 !important;
-    -webkit-text-fill-color: #102A43 !important;
-    caret-color: #102A43 !important;
-    border: 1px solid #BFCBD5 !important;
-    border-radius: 8px !important;
-    opacity: 1 !important;
-}
-
-.st-key-historical_date_range [data-testid="stDateInput"] div:has(input) {
-    background: #FFFFFF !important;
-}
-
-.st-key-historical_date_range [data-testid="stDateInput"] button {
-    background: #FFFFFF !important;
-    color: #102A43 !important;
-    border: none !important;
-    box-shadow: none !important;
-}
-
-.st-key-historical_date_range [data-testid="stDateInput"] button svg {
-    color: #102A43 !important;
-    fill: currentColor !important;
-    stroke: currentColor !important;
-    opacity: 1 !important;
-}
-
-.st-key-historical_date_range [data-testid="stDateInput"]:focus-within {
-    background: #FFFFFF !important;
-}
-
-/* Label */
-
-.st-key-historical_date_range label,
-.st-key-historical_date_range label p,
-.st-key-historical_date_range label span {
-
-    color: #102A43 !important;
-
-    -webkit-text-fill-color:
-        #102A43 !important;
-
-    font-weight: 600 !important;
-
-    opacity: 1 !important;
-
-}
-
-
-/* Date widget */
-
-.st-key-historical_date_range
-[data-testid="stDateInput"] {
-
-    background: transparent !important;
-
-}
-
-
-/* Internal wrappers */
-
-.st-key-historical_date_range
-[data-testid="stDateInput"] > div {
-
-    background: transparent !important;
-
-}
-
-
-/* Actual visible date fields */
-
-.st-key-historical_date_range
-[data-testid="stDateInput"] input {
-
-    background: #FFFFFF !important;
 
     background-color: #FFFFFF !important;
 
     color: #102A43 !important;
 
-    -webkit-text-fill-color:
-        #102A43 !important;
-
-    caret-color: #102A43 !important;
-
-    border:
-        1px solid #BFCBD5 !important;
-
-    border-radius: 8px !important;
-
     opacity: 1 !important;
-
-}
-
-
-/* Date field ancestors */
-
-.st-key-historical_date_range
-[data-testid="stDateInput"]
-div:has(input) {
-
-    background: #FFFFFF !important;
-
 }
 
 
 /* Calendar button */
 
-.st-key-historical_date_range
-[data-testid="stDateInput"] button {
+.st-key-prediction_date [data-testid="stDateInput"] button,
+.st-key-historical_date_range [data-testid="stDateInput"] button {
 
-    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
 
     color: #102A43 !important;
 
     border: none !important;
-
-    box-shadow: none !important;
-
 }
 
 
 /* Calendar icon */
 
-.st-key-historical_date_range
-[data-testid="stDateInput"] button svg {
+.st-key-prediction_date [data-testid="stDateInput"] button svg,
+.st-key-historical_date_range [data-testid="stDateInput"] button svg {
 
     color: #102A43 !important;
-
-    fill: currentColor !important;
-
-    stroke: currentColor !important;
 
     opacity: 1 !important;
-
-}
-
-
-/* Focus */
-
-.st-key-historical_date_range
-[data-testid="stDateInput"]:focus-within {
-
-    background: #FFFFFF !important;
-
-}
-
-
-/* ---------------------------------------------------------
-   COMMON DATE INPUT SEGMENTS
---------------------------------------------------------- */
-
-.st-key-prediction_date input,
-.st-key-historical_date_range input {
-
-    background-color: #FFFFFF !important;
-
-    color: #102A43 !important;
-
-    -webkit-text-fill-color:
-        #102A43 !important;
-
-}
-
-
-/* Selected text */
-
-.st-key-prediction_date input::selection,
-.st-key-historical_date_range input::selection {
-
-    background: #DDF3F0 !important;
-
-    color: #102A43 !important;
-
-}
-
-
-/* Placeholder */
-
-.st-key-prediction_date input::placeholder,
-.st-key-historical_date_range input::placeholder {
-
-    color: #52616B !important;
-
-    -webkit-text-fill-color:
-        #52616B !important;
-
-    opacity: 1 !important;
-
-}
-
-
-/* ---------------------------------------------------------
-   DATE RANGE INTERNAL INPUTS
---------------------------------------------------------- */
-
-.st-key-historical_date_range
-input {
-
-    min-width: 0 !important;
-
-}
-
-
-/* ---------------------------------------------------------
-   DATE POPUP
---------------------------------------------------------- */
-
-[data-baseweb="popover"] {
-
-    background-color: #FFFFFF !important;
-
-}
-
-
-[data-baseweb="popover"] [role="dialog"] {
-
-    background-color: #FFFFFF !important;
-
-    color: #102A43 !important;
-
-}
-
-
-[data-baseweb="popover"] [role="dialog"] p,
-[data-baseweb="popover"] [role="dialog"] span {
-
-    color: #102A43 !important;
-
-}
-
-
-[data-baseweb="popover"] [role="dialog"] button {
-
-    color: #102A43 !important;
-
-    background-color: transparent !important;
-
 }
 
 
@@ -1082,18 +687,13 @@ input {
 ========================================================= */
 
 [data-testid="stRadio"] label {
-
     color: #102A43 !important;
-
     font-weight: 500 !important;
-
 }
 
 
 [data-testid="stRadio"] p {
-
     color: #102A43 !important;
-
 }
 
 
@@ -1102,9 +702,7 @@ input {
 ========================================================= */
 
 [data-testid="stSlider"] {
-
     color: var(--indigo) !important;
-
 }
 
 
@@ -1131,7 +729,6 @@ input {
 
     transition:
         all 0.2s ease !important;
-
 }
 
 
@@ -1145,7 +742,6 @@ input {
 
     transform:
         translateY(-1px);
-
 }
 
 
@@ -1171,7 +767,6 @@ input {
     box-shadow:
         0 4px 12px
         rgba(22, 143, 135, 0.18);
-
 }
 
 
@@ -1180,10 +775,6 @@ input {
 
     color:
         #FFFFFF !important;
-
-    -webkit-text-fill-color:
-        #FFFFFF !important;
-
 }
 
 
@@ -1220,7 +811,6 @@ input {
 
     transition:
         all 0.2s ease !important;
-
 }
 
 
@@ -1232,7 +822,6 @@ input {
     box-shadow:
         0 7px 18px
         rgba(22, 143, 135, 0.28) !important;
-
 }
 
 
@@ -1241,10 +830,6 @@ input {
 
     color:
         #FFFFFF !important;
-
-    -webkit-text-fill-color:
-        #FFFFFF !important;
-
 }
 
 
@@ -1269,7 +854,6 @@ div[data-testid="stMetric"] {
     box-shadow:
         0 3px 12px
         rgba(15, 36, 54, 0.04);
-
 }
 
 
@@ -1278,7 +862,6 @@ div[data-testid="stMetric"] {
 
     color:
         var(--muted) !important;
-
 }
 
 
@@ -1290,7 +873,6 @@ div[data-testid="stMetric"] {
 
     font-weight:
         700 !important;
-
 }
 
 
@@ -1311,7 +893,6 @@ div[data-testid="stMetric"] {
 
     overflow:
         hidden !important;
-
 }
 
 
@@ -1332,7 +913,6 @@ div[data-testid="stMetric"] {
 
     overflow:
         hidden !important;
-
 }
 
 
@@ -1341,7 +921,6 @@ div[data-testid="stMetric"] {
 
     color:
         #102A43 !important;
-
 }
 
 
@@ -1350,10 +929,7 @@ div[data-testid="stMetric"] {
 ========================================================= */
 
 [data-testid="stAlert"] {
-
-    border-radius:
-        12px !important;
-
+    border-radius: 12px !important;
 }
 
 
@@ -1362,10 +938,7 @@ div[data-testid="stMetric"] {
 ========================================================= */
 
 hr {
-
-    border-color:
-        var(--line) !important;
-
+    border-color: var(--line) !important;
 }
 
 
@@ -1381,7 +954,6 @@ hr {
             #0B1D33 0%,
             #132D42 100%
         ) !important;
-
 }
 
 
@@ -1391,7 +963,6 @@ hr {
 
     color:
         #F2F7FA !important;
-
 }
 
 
@@ -1400,7 +971,6 @@ hr {
 
     color:
         #FFFFFF !important;
-
 }
 
 
@@ -1409,15 +979,12 @@ hr {
 
     color:
         #FFFFFF !important;
-
 }
 
 
 [data-testid="stSidebar"] button {
-
     color:
         #FFFFFF !important;
-
 }
 
 
@@ -1425,10 +992,6 @@ hr {
 
     color:
         #102A43 !important;
-
-    -webkit-text-fill-color:
-        #102A43 !important;
-
 }
 
 
@@ -1449,15 +1012,12 @@ hr {
 
     line-height:
         1.8;
-
 }
 
 
 .footer b {
-
     color:
         #0B1D33 !important;
-
 }
 
 
@@ -1466,10 +1026,8 @@ hr {
 ========================================================= */
 
 .js-plotly-plot {
-
     background:
         transparent !important;
-
 }
 
 
@@ -1478,18 +1036,14 @@ hr {
 ========================================================= */
 
 #MainMenu {
-
     visibility:
         hidden;
-
 }
 
 
 footer {
-
     visibility:
         hidden;
-
 }
 
 
@@ -1509,7 +1063,6 @@ footer {
 
         padding-top:
             1rem !important;
-
     }
 
 
@@ -1520,7 +1073,6 @@ footer {
 
         border-radius:
             18px !important;
-
     }
 
 
@@ -1528,7 +1080,6 @@ footer {
 
         font-size:
             1.45rem !important;
-
     }
 
 
@@ -1536,7 +1087,6 @@ footer {
 
         font-size:
             0.95rem !important;
-
     }
 
 
@@ -1544,7 +1094,6 @@ footer {
 
         gap:
             1.2rem !important;
-
     }
 
 
@@ -1552,7 +1101,6 @@ footer {
 
         font-size:
             1.3rem !important;
-
     }
 
 }
@@ -1620,12 +1168,10 @@ PAGES = [
 # ============================================================
 
 if "page" not in st.session_state:
-
     st.session_state.page = PAGES[0]
 
 
 if st.session_state.page not in PAGES:
-
     st.session_state.page = PAGES[0]
 
 

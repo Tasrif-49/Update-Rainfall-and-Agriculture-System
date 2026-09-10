@@ -4,9 +4,7 @@ import numpy as np
 
 from datetime import date
 
-from services.data_loader import (
-    get_station_table
-)
+from services.data_loader import get_station_table
 
 from services.weather_api import (
     build_on_demand_history,
@@ -19,10 +17,6 @@ from services.weather_api import (
 # ============================================================
 
 def condition(code, pred=None):
-
-    # ========================================================
-    # PREDICTION-BASED CONDITION
-    # ========================================================
 
     if pred is not None:
 
@@ -55,10 +49,6 @@ def condition(code, pred=None):
                 "🚨 Very Heavy Rain",
                 "Very heavy rainfall expected."
             )
-
-    # ========================================================
-    # WMO WEATHER CODE
-    # ========================================================
 
     if code in [0, 1]:
         return (
@@ -110,52 +100,28 @@ def create_prediction_features(
     train_medians
 ):
 
-    # ========================================================
-    # COPY
-    # ========================================================
-
     data = historical_df.copy()
 
     data["Date"] = pd.to_datetime(
-        data["Date"]
+        data["Date"],
+        errors="coerce"
     ).dt.normalize()
 
     target_date = pd.Timestamp(
         target_date
     ).normalize()
 
-    # ========================================================
-    # SORT
-    # ========================================================
-
     data = data.sort_values(
-        [
-            "Station_ID",
-            "Date"
-        ]
-    ).reset_index(
-        drop=True
-    )
-
-    # ========================================================
-    # REMOVE TARGET DATE IF EXISTS
-    # ========================================================
+        ["Station_ID", "Date"]
+    ).reset_index(drop=True)
 
     data = data[
         ~(
-            (
-                data["Station_ID"] == station_id
-            )
+            (data["Station_ID"] == station_id)
             &
-            (
-                data["Date"] == target_date
-            )
+            (data["Date"] == target_date)
         )
     ].copy()
-
-    # ========================================================
-    # TARGET ROW
-    # ========================================================
 
     target_row = {
 
@@ -164,15 +130,11 @@ def create_prediction_features(
         "Station_ID": station_id,
 
         "Latitude": safe_float(
-            weather_values.get(
-                "Latitude"
-            )
+            weather_values.get("Latitude")
         ),
 
         "Longitude": safe_float(
-            weather_values.get(
-                "Longitude"
-            )
+            weather_values.get("Longitude")
         ),
 
         "temperature_2m_mean": safe_float(
@@ -247,17 +209,10 @@ def create_prediction_features(
             )
         ),
 
-        # Target rainfall is unknown
         "rain_sum": np.nan
     }
 
-    # ========================================================
-    # ADD TARGET ROW
-    # ========================================================
-
-    target_df = pd.DataFrame(
-        [target_row]
-    )
+    target_df = pd.DataFrame([target_row])
 
     data = pd.concat(
         [
@@ -269,37 +224,18 @@ def create_prediction_features(
     )
 
     data = data.sort_values(
-        [
-            "Station_ID",
-            "Date"
-        ]
-    ).reset_index(
-        drop=True
-    )
+        ["Station_ID", "Date"]
+    ).reset_index(drop=True)
 
     # ========================================================
     # CALENDAR FEATURES
     # ========================================================
 
-    data["year"] = (
-        data["Date"].dt.year
-    )
-
-    data["month"] = (
-        data["Date"].dt.month
-    )
-
-    data["day"] = (
-        data["Date"].dt.day
-    )
-
-    data["dayofyear"] = (
-        data["Date"].dt.dayofyear
-    )
-
-    data["dayofweek"] = (
-        data["Date"].dt.dayofweek
-    )
+    data["year"] = data["Date"].dt.year
+    data["month"] = data["Date"].dt.month
+    data["day"] = data["Date"].dt.day
+    data["dayofyear"] = data["Date"].dt.dayofyear
+    data["dayofweek"] = data["Date"].dt.dayofweek
 
     data["weekofyear"] = (
         data["Date"]
@@ -314,55 +250,37 @@ def create_prediction_features(
 
     data["month_sin"] = (
         np.sin(
-            2
-            * np.pi
-            * data["month"]
-            / 12
+            2 * np.pi * data["month"] / 12
         )
     )
 
     data["month_cos"] = (
         np.cos(
-            2
-            * np.pi
-            * data["month"]
-            / 12
+            2 * np.pi * data["month"] / 12
         )
     )
 
     data["dayofyear_sin"] = (
         np.sin(
-            2
-            * np.pi
-            * data["dayofyear"]
-            / 365.25
+            2 * np.pi * data["dayofyear"] / 365.25
         )
     )
 
     data["dayofyear_cos"] = (
         np.cos(
-            2
-            * np.pi
-            * data["dayofyear"]
-            / 365.25
+            2 * np.pi * data["dayofyear"] / 365.25
         )
     )
 
     data["dayofweek_sin"] = (
         np.sin(
-            2
-            * np.pi
-            * data["dayofweek"]
-            / 7
+            2 * np.pi * data["dayofweek"] / 7
         )
     )
 
     data["dayofweek_cos"] = (
         np.cos(
-            2
-            * np.pi
-            * data["dayofweek"]
-            / 7
+            2 * np.pi * data["dayofweek"] / 7
         )
     )
 
@@ -371,25 +289,14 @@ def create_prediction_features(
     # ========================================================
 
     RAIN_LAGS = [
-        1,
-        2,
-        3,
-        5,
-        7,
-        14,
-        21,
-        30
+        1, 2, 3, 5, 7, 14, 21, 30
     ]
 
     for lag in RAIN_LAGS:
 
-        data[
-            f"rain_lag_{lag}"
-        ] = (
+        data[f"rain_lag_{lag}"] = (
             data
-            .groupby(
-                "Station_ID"
-            )["rain_sum"]
+            .groupby("Station_ID")["rain_sum"]
             .shift(lag)
         )
 
@@ -401,20 +308,13 @@ def create_prediction_features(
         data["rain_sum"] > 0
     ).astype(int)
 
-    for lag in [
-        1,
-        2,
-        3,
-        7
-    ]:
+    for lag in [1, 2, 3, 7]:
 
         data[
             f"rain_occurrence_lag_{lag}"
         ] = (
             rain_occurrence
-            .groupby(
-                data["Station_ID"]
-            )
+            .groupby(data["Station_ID"])
             .shift(lag)
         )
 
@@ -424,30 +324,17 @@ def create_prediction_features(
 
     shifted_rain = (
         data
-        .groupby(
-            "Station_ID"
-        )["rain_sum"]
+        .groupby("Station_ID")["rain_sum"]
         .shift(1)
     )
 
-    for window in [
-        3,
-        7,
-        14,
-        30
-    ]:
-
-        # ----------------------------------------------------
-        # Rolling mean
-        # ----------------------------------------------------
+    for window in [3, 7, 14, 30]:
 
         data[
             f"rain_roll_mean_{window}"
         ] = (
             shifted_rain
-            .groupby(
-                data["Station_ID"]
-            )
+            .groupby(data["Station_ID"])
             .transform(
                 lambda x:
                 x.rolling(
@@ -457,17 +344,11 @@ def create_prediction_features(
             )
         )
 
-        # ----------------------------------------------------
-        # Rolling sum
-        # ----------------------------------------------------
-
         data[
             f"rain_roll_sum_{window}"
         ] = (
             shifted_rain
-            .groupby(
-                data["Station_ID"]
-            )
+            .groupby(data["Station_ID"])
             .transform(
                 lambda x:
                 x.rolling(
@@ -477,17 +358,11 @@ def create_prediction_features(
             )
         )
 
-        # ----------------------------------------------------
-        # Rolling std
-        # ----------------------------------------------------
-
         data[
             f"rain_roll_std_{window}"
         ] = (
             shifted_rain
-            .groupby(
-                data["Station_ID"]
-            )
+            .groupby(data["Station_ID"])
             .transform(
                 lambda x:
                 x.rolling(
@@ -515,24 +390,18 @@ def create_prediction_features(
         "shortwave_radiation_sum",
         "weather_code",
         "et0_fao_evapotranspiration"
+
     ]
 
     for feature in same_day_weather:
 
-        for lag in [
-            1,
-            2,
-            3,
-            7
-        ]:
+        for lag in [1, 2, 3, 7]:
 
             data[
                 f"{feature}_lag_{lag}"
             ] = (
                 data
-                .groupby(
-                    "Station_ID"
-                )[feature]
+                .groupby("Station_ID")[feature]
                 .shift(lag)
             )
 
@@ -559,13 +428,9 @@ def create_prediction_features(
     # ========================================================
 
     prediction_row = data[
-        (
-            data["Station_ID"] == station_id
-        )
+        (data["Station_ID"] == station_id)
         &
-        (
-            data["Date"] == target_date
-        )
+        (data["Date"] == target_date)
     ].copy()
 
     if len(prediction_row) != 1:
@@ -580,9 +445,7 @@ def create_prediction_features(
 
     X_prediction = (
         prediction_row
-        .reindex(
-            columns=feature_columns
-        )
+        .reindex(columns=feature_columns)
     )
 
     # ========================================================
@@ -597,10 +460,7 @@ def create_prediction_features(
         )
 
     X_prediction = X_prediction.replace(
-        [
-            np.inf,
-            -np.inf
-        ],
+        [np.inf, -np.inf],
         np.nan
     )
 
@@ -609,20 +469,14 @@ def create_prediction_features(
     # ========================================================
 
     station_history = data[
-        (
-            data["Station_ID"] == station_id
-        )
+        (data["Station_ID"] == station_id)
         &
-        (
-            data["Date"] < target_date
-        )
+        (data["Date"] < target_date)
     ].copy()
 
     station_history = (
         station_history
-        .reindex(
-            columns=feature_columns
-        )
+        .reindex(columns=feature_columns)
     )
 
     for col in station_history.columns:
@@ -634,9 +488,7 @@ def create_prediction_features(
 
     station_medians = (
         station_history
-        .median(
-            numeric_only=True
-        )
+        .median(numeric_only=True)
     )
 
     # ========================================================
@@ -645,16 +497,12 @@ def create_prediction_features(
 
     X_prediction = (
         X_prediction
-        .fillna(
-            station_medians
-        )
+        .fillna(station_medians)
     )
 
     X_prediction = (
         X_prediction
-        .fillna(
-            train_medians
-        )
+        .fillna(train_medians)
     )
 
     X_prediction = (
@@ -721,55 +569,9 @@ def show_prediction(
 ):
 
     # ========================================================
-    # TIMES NEW ROMAN
-    # ========================================================
-
-    st.markdown(
-        """
-        <style>
-
-        html,
-        body,
-        [class*="css"],
-        .stApp,
-        .stMarkdown,
-        .stText,
-        .stButton,
-        .stSelectbox,
-        .stDateInput,
-        .stNumberInput,
-        .stForm,
-        .stMetric,
-        .stAlert,
-        .stCaption,
-        .stTitle,
-        .stHeader,
-        .stSubheader {
-
-            font-family:
-            "Times New Roman",
-            Times,
-            serif !important;
-        }
-
-        input,
-        textarea,
-        select,
-        button {
-
-            font-family:
-            "Times New Roman",
-            Times,
-            serif !important;
-        }
-
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # ========================================================
-    # TITLE
+    # IMPORTANT:
+    # Do NOT use [class*="css"] here.
+    # Streamlit Cloud may use different generated CSS classes.
     # ========================================================
 
     st.title(
@@ -787,9 +589,7 @@ def show_prediction(
     # STATION DATA
     # ========================================================
 
-    meta = get_station_table(
-        df
-    ).copy()
+    meta = get_station_table(df).copy()
 
     meta["label"] = meta.apply(
         lambda x:
@@ -826,7 +626,8 @@ def show_prediction(
     selected_date = st.date_input(
         "📅 Prediction Date",
         value=today,
-        key="prediction_date"
+        key="prediction_date",
+        format="DD/MM/YYYY"
     )
 
     target = pd.Timestamp(
@@ -837,17 +638,9 @@ def show_prediction(
     # STATUS
     # ========================================================
 
-    is_future = (
-        selected_date > today
-    )
-
-    is_today = (
-        selected_date == today
-    )
-
-    is_past = (
-        selected_date < today
-    )
+    is_future = selected_date > today
+    is_today = selected_date == today
+    is_past = selected_date < today
 
     if is_future:
 
@@ -884,23 +677,17 @@ def show_prediction(
     )
 
     # ========================================================
-    # CLEAR OLD RESULT WHEN STATION/DATE CHANGES
+    # CLEAR OLD RESULT
     # ========================================================
 
-    if (
-        "last_prediction_key"
-        in st.session_state
-    ):
+    if "last_prediction_key" in st.session_state:
 
         if (
             st.session_state.last_prediction_key
             != weather_key
         ):
 
-            if (
-                "rain_prediction"
-                in st.session_state
-            ):
+            if "rain_prediction" in st.session_state:
 
                 del st.session_state[
                     "rain_prediction"
@@ -910,9 +697,7 @@ def show_prediction(
     # FETCH WEATHER BUTTON
     # ========================================================
 
-    col1, col2 = st.columns(
-        [1, 3]
-    )
+    col1, col2 = st.columns([1, 3])
 
     with col1:
 
@@ -929,8 +714,7 @@ def show_prediction(
     if (
         refresh_weather
         or
-        "weather_data_key"
-        not in st.session_state
+        "weather_data_key" not in st.session_state
         or
         st.session_state.weather_data_key
         != weather_key
@@ -955,7 +739,6 @@ def show_prediction(
                 )
 
                 st.session_state.weather_values = None
-
                 st.session_state.weather_error = error
 
             else:
@@ -975,15 +758,12 @@ def show_prediction(
     # ========================================================
 
     station_df = df[
-        df["Station_ID"]
-        == station["Station_ID"]
+        df["Station_ID"] == station["Station_ID"]
     ].copy()
 
     base = (
         station_df
-        .median(
-            numeric_only=True
-        )
+        .median(numeric_only=True)
         .to_dict()
     )
 
@@ -1047,9 +827,7 @@ def show_prediction(
             "You can edit any value if needed."
         )
 
-        # ====================================================
         # ROW 1
-        # ====================================================
 
         c1, c2, c3, c4 = st.columns(4)
 
@@ -1093,9 +871,7 @@ def show_prediction(
             )
         )
 
-        # ====================================================
         # ROW 2
-        # ====================================================
 
         c1, c2, c3, c4 = st.columns(4)
 
@@ -1135,9 +911,7 @@ def show_prediction(
             )
         )
 
-        # ====================================================
         # ROW 3
-        # ====================================================
 
         c1, c2, c3, c4 = st.columns(4)
 
@@ -1180,10 +954,6 @@ def show_prediction(
             )
         )
 
-        # ====================================================
-        # SUBMIT
-        # ====================================================
-
         submitted = st.form_submit_button(
             "🌧️ Predict Rainfall",
             type="primary",
@@ -1197,10 +967,6 @@ def show_prediction(
     if submitted:
 
         try:
-
-            # =================================================
-            # WEATHER VALUES
-            # =================================================
 
             values = {
 
@@ -1275,10 +1041,7 @@ def show_prediction(
             if is_future:
 
                 target_previous_day = (
-                    target
-                    - pd.Timedelta(
-                        days=1
-                    )
+                    target - pd.Timedelta(days=1)
                 )
 
                 previous_day = pred_hist[
@@ -1327,9 +1090,7 @@ def show_prediction(
 
                 X = create_prediction_features(
                     historical_df=pred_hist,
-                    station_id=station[
-                        "Station_ID"
-                    ],
+                    station_id=station["Station_ID"],
                     target_date=target,
                     weather_values=values,
                     feature_columns=feature_columns,
@@ -1346,23 +1107,15 @@ def show_prediction(
                     "Prediction features are empty."
                 )
 
-            if len(X.columns) != len(
-                feature_columns
-            ):
+            if len(X.columns) != len(feature_columns):
 
                 raise ValueError(
                     "Feature column count does not "
                     "match model."
                 )
 
-            # =================================================
-            # CHECK NAN
-            # =================================================
-
             nan_count = int(
-                X.isna()
-                .sum()
-                .sum()
+                X.isna().sum().sum()
             )
 
             if nan_count > 0:
@@ -1381,12 +1134,8 @@ def show_prediction(
             ):
 
                 prediction_array = np.asarray(
-                    model.predict(
-                        X
-                    )
-                ).reshape(
-                    -1
-                )
+                    model.predict(X)
+                ).reshape(-1)
 
             if len(prediction_array) == 0:
 
@@ -1395,9 +1144,7 @@ def show_prediction(
                 )
 
             pred = max(
-                float(
-                    prediction_array[0]
-                ),
+                float(prediction_array[0]),
                 0.0
             )
 
@@ -1406,9 +1153,7 @@ def show_prediction(
             # =================================================
 
             weather_name, message = condition(
-                code=int(
-                    weather_code
-                ),
+                code=int(weather_code),
                 pred=pred
             )
 
@@ -1418,37 +1163,24 @@ def show_prediction(
 
             st.session_state.rain_prediction = {
 
-                "prediction":
-                pred,
+                "prediction": pred,
 
-                "station":
-                station,
+                "station": station,
 
-                "date":
-                target,
+                "date": target,
 
-                "weather_values":
-                values,
+                "weather_values": values,
 
-                "condition":
-                weather_name,
+                "condition": weather_name,
 
-                "message":
-                message,
+                "message": message,
 
-                "et0":
-                float(et0),
+                "et0": float(et0),
 
-                "history_note":
-                bridge_note,
+                "history_note": bridge_note,
 
-                "is_future":
-                is_future
+                "is_future": is_future
             }
-
-            # =================================================
-            # SAVE CURRENT KEY
-            # =================================================
 
             st.session_state.last_prediction_key = (
                 weather_key
@@ -1460,35 +1192,20 @@ def show_prediction(
                 "❌ Prediction Failed"
             )
 
-            st.exception(
-                e
-            )
+            st.exception(e)
 
     # ========================================================
     # RESULT
     # ========================================================
 
-    if (
-        "rain_prediction"
-        in st.session_state
-    ):
+    if "rain_prediction" in st.session_state:
 
-        result = (
-            st.session_state.rain_prediction
-        )
-
-        # ====================================================
-        # SAME STATION
-        # ====================================================
+        result = st.session_state.rain_prediction
 
         same_station = (
             result["station"]["Station_ID"]
             == station["Station_ID"]
         )
-
-        # ====================================================
-        # SAME DATE
-        # ====================================================
 
         same_date = (
             pd.Timestamp(
@@ -1499,20 +1216,11 @@ def show_prediction(
 
         if same_station and same_date:
 
-            pred = result[
-                "prediction"
-            ]
+            pred = result["prediction"]
 
             st.divider()
 
-            # =================================================
-            # RESULT TITLE
-            # =================================================
-
-            if result.get(
-                "is_future",
-                False
-            ):
+            if result.get("is_future", False):
 
                 st.subheader(
                     "🔮 Future Prediction Result"
@@ -1523,10 +1231,6 @@ def show_prediction(
                 st.subheader(
                     "🌧️ Prediction Result"
                 )
-
-            # =================================================
-            # METRICS
-            # =================================================
 
             a, b, c = st.columns(3)
 
@@ -1545,30 +1249,15 @@ def show_prediction(
                 f"{result['et0']:.2f}"
             )
 
-            # =================================================
-            # MESSAGE
-            # =================================================
-
             st.info(
                 result["message"]
             )
-
-            # =================================================
-            # HISTORY NOTE
-            # =================================================
 
             st.caption(
                 result["history_note"]
             )
 
-            # =================================================
-            # FUTURE INFORMATION
-            # =================================================
-
-            if result.get(
-                "is_future",
-                False
-            ):
+            if result.get("is_future", False):
 
                 st.success(
                     "🔮 Future prediction completed. "

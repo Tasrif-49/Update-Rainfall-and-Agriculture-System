@@ -30,9 +30,7 @@ def load_model():
 
             return package, filename
 
-
     raise FileNotFoundError(
-
         f"""
         Model file not found.
 
@@ -40,7 +38,6 @@ def load_model():
 
         {MODEL_DIR}
         """
-
     )
 
 
@@ -61,9 +58,7 @@ def load_dataset():
 
             return df, filename
 
-
     raise FileNotFoundError(
-
         f"""
         CSV file not found.
 
@@ -71,7 +66,6 @@ def load_dataset():
 
         {DATA_DIR}
         """
-
     )
 
 
@@ -82,24 +76,16 @@ def load_dataset():
 def validate_dataset(df):
 
     missing = [
-
         column
-
         for column in REQUIRED_COLUMNS
-
         if column not in df.columns
-
     ]
-
 
     if missing:
 
         raise ValueError(
-
             f"Missing required columns: {missing}"
-
         )
-
 
     return True
 
@@ -112,61 +98,61 @@ def prepare_dataset(df):
 
     df = df.copy()
 
-
-    # DATE
+    # ========================================================
+    # DATE CONVERSION
+    # ========================================================
 
     df["Date"] = pd.to_datetime(
-
         df["Date"],
-
         errors="coerce"
+    )
 
-    ).dt.normalize()
+    # Remove invalid dates
 
+    df = df.dropna(
+        subset=["Date"]
+    ).copy()
+
+    # Remove time component
+
+    df["Date"] = (
+        df["Date"]
+        .dt.normalize()
+    )
+
+    # ========================================================
+    # SORT
+    # ========================================================
 
     df = (
-
         df
-
-        .dropna(
-            subset=["Date"]
-        )
-
         .sort_values(
-
             [
-
                 "Station_ID",
-
                 "Date"
-
             ]
-
         )
-
         .reset_index(
             drop=True
         )
-
     )
 
-
+    # ========================================================
     # OPTIONAL COLUMNS
+    # ========================================================
 
     for column in [
-
         "Station",
-
         "District",
-
         "Division"
-
     ]:
 
         if column not in df.columns:
 
-            df[column] = df["Station_ID"].astype(str)
-
+            df[column] = (
+                df["Station_ID"]
+                .astype(str)
+            )
 
     return df
 
@@ -178,63 +164,38 @@ def prepare_dataset(df):
 def get_station_table(df):
 
     meta = (
-
         df
-
         .groupby(
-
             "Station_ID",
-
             as_index=False
-
         )
-
         .agg(
-
             Station=(
-
                 "Station",
-
                 "first"
-
             ),
 
             District=(
-
                 "District",
-
                 "first"
-
             ),
 
             Division=(
-
                 "Division",
-
                 "first"
-
             ),
 
             Latitude=(
-
                 "Latitude",
-
                 "median"
-
             ),
 
             Longitude=(
-
                 "Longitude",
-
                 "median"
-
             )
-
         )
-
     )
-
 
     return meta
 
@@ -243,99 +204,76 @@ def get_station_table(df):
 # GET MODEL HISTORY DAYS
 # ============================================================
 
-def get_model_history_days(feature_columns):
+def get_model_history_days(
+    feature_columns
+):
 
     import re
 
-
     rain_lags = []
-
     roll_windows = []
-
     weather_lags = []
-
 
     for col in feature_columns:
 
-
+        # ====================================================
         # RAIN LAG
+        # ====================================================
 
         m = re.fullmatch(
-
             r"rain_lag_(\d+)",
-
             col
-
         )
-
 
         if m:
 
             rain_lags.append(
-
                 int(m.group(1))
-
             )
 
             continue
 
-
+        # ====================================================
         # ROLLING
+        # ====================================================
 
         m = re.fullmatch(
-
             r"rain_roll_(?:mean|sum|std)_(\d+)",
-
             col
-
         )
-
 
         if m:
 
             roll_windows.append(
-
                 int(m.group(1))
-
             )
 
             continue
 
-
+        # ====================================================
         # WEATHER LAG
+        # ====================================================
 
         m = re.fullmatch(
-
             r"(.+)_lag_(\d+)",
-
             col
-
         )
 
-
-        if m and not col.startswith("rain_"):
+        if (
+            m
+            and not col.startswith("rain_")
+        ):
 
             weather_lags.append(
-
                 int(m.group(2))
-
             )
 
-
     return max(
-
         rain_lags
-
         +
-
         roll_windows
-
         +
-
         weather_lags
-
         +
-
         [1]
-
     )

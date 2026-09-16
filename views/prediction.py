@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
 
 from datetime import date
 
@@ -51,22 +52,60 @@ def condition(code, pred=None):
             )
 
     if code in [0, 1]:
+
         return (
             "☀️ Sunny",
             "Clear weather."
         )
 
     elif code in [2, 3, 45, 48]:
+
         return (
             "☁️ Cloudy",
             "Cloudy conditions."
         )
 
     else:
+
         return (
             "🌧️ Rainy",
             "Rainy conditions."
         )
+
+
+# ============================================================
+# RAIN PROBABILITY
+# ============================================================
+
+def estimate_rain_probability(pred):
+
+    """
+    Estimate rainfall likelihood from predicted rainfall amount.
+
+    IMPORTANT:
+    This is an estimated UI score based on predicted rainfall.
+    It is NOT a calibrated statistical probability from the
+    regression model.
+    """
+
+    pred = max(float(pred), 0.0)
+
+    if pred <= 0:
+
+        probability = 5.0
+
+    else:
+
+        probability = 100 * (
+            1 - np.exp(-pred / 18)
+        )
+
+    probability = min(
+        max(probability, 0),
+        100
+    )
+
+    return probability
 
 
 # ============================================================
@@ -78,6 +117,7 @@ def safe_float(value, default=0.0):
     try:
 
         if pd.isna(value):
+
             return float(default)
 
         return float(value)
@@ -122,6 +162,10 @@ def create_prediction_features(
             (data["Date"] == target_date)
         )
     ].copy()
+
+    # ========================================================
+    # TARGET ROW
+    # ========================================================
 
     target_row = {
 
@@ -212,7 +256,9 @@ def create_prediction_features(
         "rain_sum": np.nan
     }
 
-    target_df = pd.DataFrame([target_row])
+    target_df = pd.DataFrame(
+        [target_row]
+    )
 
     data = pd.concat(
         [
@@ -232,10 +278,18 @@ def create_prediction_features(
     # ========================================================
 
     data["year"] = data["Date"].dt.year
+
     data["month"] = data["Date"].dt.month
+
     data["day"] = data["Date"].dt.day
-    data["dayofyear"] = data["Date"].dt.dayofyear
-    data["dayofweek"] = data["Date"].dt.dayofweek
+
+    data["dayofyear"] = (
+        data["Date"].dt.dayofyear
+    )
+
+    data["dayofweek"] = (
+        data["Date"].dt.dayofweek
+    )
 
     data["weekofyear"] = (
         data["Date"]
@@ -262,25 +316,33 @@ def create_prediction_features(
 
     data["dayofyear_sin"] = (
         np.sin(
-            2 * np.pi * data["dayofyear"] / 365.25
+            2 * np.pi
+            * data["dayofyear"]
+            / 365.25
         )
     )
 
     data["dayofyear_cos"] = (
         np.cos(
-            2 * np.pi * data["dayofyear"] / 365.25
+            2 * np.pi
+            * data["dayofyear"]
+            / 365.25
         )
     )
 
     data["dayofweek_sin"] = (
         np.sin(
-            2 * np.pi * data["dayofweek"] / 7
+            2 * np.pi
+            * data["dayofweek"]
+            / 7
         )
     )
 
     data["dayofweek_cos"] = (
         np.cos(
-            2 * np.pi * data["dayofweek"] / 7
+            2 * np.pi
+            * data["dayofweek"]
+            / 7
         )
     )
 
@@ -289,12 +351,21 @@ def create_prediction_features(
     # ========================================================
 
     RAIN_LAGS = [
-        1, 2, 3, 5, 7, 14, 21, 30
+        1,
+        2,
+        3,
+        5,
+        7,
+        14,
+        21,
+        30
     ]
 
     for lag in RAIN_LAGS:
 
-        data[f"rain_lag_{lag}"] = (
+        data[
+            f"rain_lag_{lag}"
+        ] = (
             data
             .groupby("Station_ID")["rain_sum"]
             .shift(lag)
@@ -379,16 +450,27 @@ def create_prediction_features(
     same_day_weather = [
 
         "temperature_2m_mean",
+
         "temperature_2m_max",
+
         "temperature_2m_min",
+
         "apparent_temperature_mean",
+
         "sunshine_duration",
+
         "daylight_duration",
+
         "wind_speed_10m_max",
+
         "wind_gusts_10m_max",
+
         "wind_direction_10m_dominant",
+
         "shortwave_radiation_sum",
+
         "weather_code",
+
         "et0_fao_evapotranspiration"
 
     ]
@@ -569,9 +651,7 @@ def show_prediction(
 ):
 
     # ========================================================
-    # IMPORTANT:
-    # Do NOT use [class*="css"] here.
-    # Streamlit Cloud may use different generated CSS classes.
+    # PAGE TITLE
     # ========================================================
 
     st.title(
@@ -623,12 +703,25 @@ def show_prediction(
 
     today = date.today()
 
+    # ========================================================
+    # STREAMLIT CALENDAR (DATE CHANGE FIX)
+    # ========================================================
+
+    if "prediction_date" not in st.session_state:
+        st.session_state.prediction_date = today
+
     selected_date = st.date_input(
         "📅 Prediction Date",
-        value=today,
-        key="prediction_date",
-        format="DD/MM/YYYY"
+        value=st.session_state.prediction_date,
+        key="calendar_date",
+        format="YYYY/MM/DD",
+        on_change=lambda: st.session_state.update(
+            prediction_date=st.session_state.calendar_date
+        )
     )
+
+    # Always update target after calendar change
+    st.session_state.prediction_date = selected_date
 
     target = pd.Timestamp(
         selected_date
@@ -639,7 +732,9 @@ def show_prediction(
     # ========================================================
 
     is_future = selected_date > today
+
     is_today = selected_date == today
+
     is_past = selected_date < today
 
     if is_future:
@@ -675,6 +770,22 @@ def show_prediction(
         f"{station['Station_ID']}_"
         f"{target.strftime('%Y%m%d')}"
     )
+
+    # Clear cached weather/result whenever station or date changes
+    if (
+        st.session_state.get("last_calendar_key")
+        != weather_key
+    ):
+        st.session_state.last_calendar_key = weather_key
+
+        if "weather_data_key" in st.session_state:
+            del st.session_state.weather_data_key
+
+        if "weather_values" in st.session_state:
+            del st.session_state.weather_values
+
+        if "rain_prediction" in st.session_state:
+            del st.session_state.rain_prediction
 
     # ========================================================
     # CLEAR OLD RESULT
@@ -739,6 +850,7 @@ def show_prediction(
                 )
 
                 st.session_state.weather_values = None
+
                 st.session_state.weather_error = error
 
             else:
@@ -793,21 +905,21 @@ def show_prediction(
 
             st.success(
                 f"🔮 Forecast Weather Loaded: "
-                f"{target.strftime('%d %B %Y')}"
+                f"{target.strftime('%Y-%m-%d')}"
             )
 
         elif is_today:
 
             st.success(
                 f"✅ Today's Weather Data Loaded: "
-                f"{target.strftime('%d %B %Y')}"
+                f"{target.strftime('%Y-%m-%d')}"
             )
 
         else:
 
             st.success(
                 f"📚 Historical Weather Data Loaded: "
-                f"{target.strftime('%d %B %Y')}"
+                f"{target.strftime('%Y-%m-%d')}"
             )
 
     # ========================================================
@@ -827,7 +939,9 @@ def show_prediction(
             "You can edit any value if needed."
         )
 
+        # ====================================================
         # ROW 1
+        # ====================================================
 
         c1, c2, c3, c4 = st.columns(4)
 
@@ -871,7 +985,9 @@ def show_prediction(
             )
         )
 
+        # ====================================================
         # ROW 2
+        # ====================================================
 
         c1, c2, c3, c4 = st.columns(4)
 
@@ -911,7 +1027,9 @@ def show_prediction(
             )
         )
 
+        # ====================================================
         # ROW 3
+        # ====================================================
 
         c1, c2, c3, c4 = st.columns(4)
 
@@ -967,6 +1085,10 @@ def show_prediction(
     if submitted:
 
         try:
+
+            # =================================================
+            # WEATHER VALUES
+            # =================================================
 
             values = {
 
@@ -1158,28 +1280,48 @@ def show_prediction(
             )
 
             # =================================================
+            # RAIN PROBABILITY
+            # =================================================
+
+            rain_probability = (
+                estimate_rain_probability(pred)
+            )
+
+            # =================================================
             # SAVE RESULT
             # =================================================
 
             st.session_state.rain_prediction = {
 
-                "prediction": pred,
+                "prediction":
+                pred,
 
-                "station": station,
+                "rain_probability":
+                rain_probability,
 
-                "date": target,
+                "station":
+                station,
 
-                "weather_values": values,
+                "date":
+                target,
 
-                "condition": weather_name,
+                "weather_values":
+                values,
 
-                "message": message,
+                "condition":
+                weather_name,
 
-                "et0": float(et0),
+                "message":
+                message,
 
-                "history_note": bridge_note,
+                "et0":
+                float(et0),
 
-                "is_future": is_future
+                "history_note":
+                bridge_note,
+
+                "is_future":
+                is_future
             }
 
             st.session_state.last_prediction_key = (
@@ -1200,7 +1342,9 @@ def show_prediction(
 
     if "rain_prediction" in st.session_state:
 
-        result = st.session_state.rain_prediction
+        result = (
+            st.session_state.rain_prediction
+        )
 
         same_station = (
             result["station"]["Station_ID"]
@@ -1220,7 +1364,212 @@ def show_prediction(
 
             st.divider()
 
-            if result.get("is_future", False):
+            # =================================================
+            # RAIN PROBABILITY (ABOVE RESULT METRICS)
+            # =================================================
+
+            probability = float(
+                result.get(
+                    "rain_probability",
+                    estimate_rain_probability(
+                        pred
+                    )
+                )
+            )
+
+            st.markdown(
+                "### 🌧️ Rainfall Probability"
+            )
+
+            # =================================================
+            # SPEEDOMETER STYLE RAIN PROBABILITY GAUGE
+            # =================================================
+
+            theta = np.linspace(0, 180, 120)
+            # =================================================
+            # PERFECT DONUT STYLE DASHBOARD SPEEDOMETER
+            # =================================================
+
+            import math
+
+            fig = go.Figure()
+
+            # Donut style semicircle using scatter filled shapes
+            center_x = 0
+            center_y = 0
+
+            outer_r = 1.0
+            inner_r = 0.78
+
+            segments = [
+                (0, 25, "#22C55E"),
+                (25, 50, "#FACC15"),
+                (50, 75, "#FB923C"),
+                (75, 100, "#EF4444")
+            ]
+
+            for low, high, color in segments:
+
+                a1 = math.pi - math.pi * high / 100
+                a2 = math.pi - math.pi * low / 100
+
+                angles = np.linspace(a1, a2, 120)
+
+                x_outer = outer_r * np.cos(angles)
+                y_outer = outer_r * np.sin(angles)
+
+                x_inner = inner_r * np.cos(angles[::-1])
+                y_inner = inner_r * np.sin(angles[::-1])
+
+                x = np.concatenate([x_outer, x_inner])
+                y = np.concatenate([y_outer, y_inner])
+
+                fig.add_trace(
+                    go.Scatter(
+                        x=x,
+                        y=y,
+                        fill="toself",
+                        mode="lines",
+                        line=dict(
+                            width=0
+                        ),
+                        fillcolor=color,
+                        hoverinfo="skip",
+                        showlegend=False
+                    )
+                )
+
+            # Inner white face
+            face_angles = np.linspace(math.pi, 0, 200)
+
+            fig.add_trace(
+                go.Scatter(
+                    x=inner_r*np.cos(face_angles),
+                    y=inner_r*np.sin(face_angles),
+                    fill="toself",
+                    mode="lines",
+                    line=dict(width=0),
+                    fillcolor="#FFFFFF",
+                    hoverinfo="skip",
+                    showlegend=False
+                )
+            )
+
+            # Needle
+            needle_angle = math.pi - math.pi * probability / 100
+
+            fig.add_trace(
+                go.Scatter(
+                    x=[
+                        0,
+                        0.68*math.cos(needle_angle)
+                    ],
+                    y=[
+                        0,
+                        0.68*math.sin(needle_angle)
+                    ],
+                    mode="lines",
+                    line=dict(
+                        color="#F97316",
+                        width=6
+                    ),
+                    hoverinfo="skip",
+                    showlegend=False
+                )
+            )
+
+            # Center knob
+            fig.add_trace(
+                go.Scatter(
+                    x=[0],
+                    y=[0],
+                    mode="markers",
+                    marker=dict(
+                        size=18,
+                        color="#F97316",
+                        line=dict(
+                            color="white",
+                            width=3
+                        )
+                    ),
+                    hoverinfo="skip",
+                    showlegend=False
+                )
+            )
+
+            fig.add_annotation(
+                x=0,
+                y=0.25,
+                text=f"<b>{probability:.1f}%</b>",
+                showarrow=False,
+                font=dict(
+                    size=38,
+                    color="#0F172A"
+                )
+            )
+
+            fig.add_annotation(
+                x=0,
+                y=-0.05,
+                text="RAIN PROBABILITY",
+                showarrow=False,
+                font=dict(
+                    size=12,
+                    color="#64748B"
+                )
+            )
+
+            fig.update_layout(
+                height=330,
+                autosize=True,
+                margin=dict(
+                    l=20,
+                    r=20,
+                    t=10,
+                    b=10
+                ),
+                dragmode=False,
+                hovermode=False,
+                xaxis=dict(
+                    visible=False,
+                    fixedrange=True,
+                    range=[-1.15,1.15],
+                    scaleanchor="y",
+                    scaleratio=1
+                ),
+                yaxis=dict(
+                    visible=False,
+                    fixedrange=True,
+                    range=[-0.2,1.1]
+                ),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)"
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True,
+                config={
+                    "displayModeBar": False,
+                    "scrollZoom": False,
+                    "doubleClick": False,
+                    "staticPlot": True,
+                    "responsive": True
+                }
+            )
+
+            st.caption(
+                "Probability is estimated from the predicted rainfall amount."
+            )
+
+            # =================================================
+            # PREDICTION RESULT TITLE (WITH METRICS)
+            # =================================================
+
+            if result.get(
+                "is_future",
+                False
+            ):
 
                 st.subheader(
                     "🔮 Future Prediction Result"
@@ -1231,6 +1580,10 @@ def show_prediction(
                 st.subheader(
                     "🌧️ Prediction Result"
                 )
+
+            # =================================================
+            # MAIN METRICS
+            # =================================================
 
             a, b, c = st.columns(3)
 
@@ -1249,6 +1602,38 @@ def show_prediction(
                 f"{result['et0']:.2f}"
             )
 
+            # =================================================
+            # PROBABILITY MESSAGE
+            # =================================================
+
+            if probability < 20:
+
+                st.info(
+                    "☀️ Low rainfall likelihood."
+                )
+
+            elif probability < 50:
+
+                st.info(
+                    "🌤️ Moderate rainfall likelihood."
+                )
+
+            elif probability < 75:
+
+                st.warning(
+                    "🌧️ High rainfall likelihood."
+                )
+
+            else:
+
+                st.success(
+                    "⛈️ Very high rainfall likelihood."
+                )
+
+            # =================================================
+            # GENERAL MESSAGE
+            # =================================================
+
             st.info(
                 result["message"]
             )
@@ -1257,7 +1642,14 @@ def show_prediction(
                 result["history_note"]
             )
 
-            if result.get("is_future", False):
+            # =================================================
+            # FUTURE MESSAGE
+            # =================================================
+
+            if result.get(
+                "is_future",
+                False
+            ):
 
                 st.success(
                     "🔮 Future prediction completed. "

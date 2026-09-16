@@ -1031,6 +1031,9 @@ hr {
 }
 
 
+
+
+
 /* =========================================================
    HIDE STREAMLIT DEFAULT
 ========================================================= */
@@ -1105,6 +1108,12 @@ footer {
 
 }
 
+
+/* Plotly interaction stability */
+.js-plotly-plot .svg-container {
+    touch-action: manipulation !important;
+}
+
 </style>
 """,
     unsafe_allow_html=True
@@ -1155,7 +1164,7 @@ PAGES = [
 
     "🏠 Home",
     "🔮 Rain Prediction",
-    "🌱 Agriculture",
+    "🌱 Agriculture Irrigation (কৃষি সেচ ব্যবস্থা)",
     "📂 Historical Data",
     "📊 Analytics",
     "ℹ️ About"
@@ -1248,8 +1257,7 @@ elif page == "🔮 Rain Prediction":
     )
 
 
-elif page == "🌱 Agriculture":
-
+elif page == "🌱 Agriculture Irrigation (কৃষি সেচ ব্যবস্থা)":
     show_agriculture()
 
 
@@ -1289,8 +1297,8 @@ quick_pages = [
     ),
 
     (
-        "🌱 Agriculture",
-        "🌱 Agriculture"
+    "🌱 Agriculture",
+    "🌱 Agriculture Irrigation (কৃষি সেচ ব্যবস্থা)"
     ),
 
     (

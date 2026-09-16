@@ -114,7 +114,7 @@ def show_home(df):
 
     if b.button(
 
-        "🌱 Smart Agriculture",
+        "🌱 Smart Agriculture (কৃষি সেচ ব্যবস্থা)",
 
        width="stretch",
 
@@ -122,7 +122,7 @@ def show_home(df):
 
     ):
 
-        st.session_state.page = "🌱 Agriculture"
+        st.session_state.page = "🌱 Agriculture "
 
         st.rerun()
 
@@ -224,12 +224,30 @@ def show_home(df):
         )
 
 
+        fig.update_layout(
+            height=400,
+            dragmode=False,
+            hovermode="closest",
+            uirevision="constant"
+        )
+
         st.plotly_chart(
-
             fig,
-
-           width="stretch"
-
+            use_container_width=True,
+            config={
+                "displayModeBar": True,
+                "displaylogo": False,
+                "scrollZoom": False,
+                "doubleClick": "reset",
+                "modeBarButtonsToRemove": [
+                    "pan2d",
+                    "select2d",
+                    "lasso2d",
+                    "zoomIn2d",
+                    "zoomOut2d"
+                ]
+            },
+            key="monthly_rainfall_fixed"
         )
 
 
@@ -260,9 +278,28 @@ def show_home(df):
         )
 
 
+        fig.update_layout(
+            height=400,
+            dragmode=False,
+            hovermode="closest",
+            uirevision="constant"
+        )
+
         st.plotly_chart(
-
             fig,
-
-           width="stretch"
+            use_container_width=True,
+            config={
+                "displayModeBar": True,
+                "displaylogo": False,
+                "scrollZoom": False,
+                "doubleClick": "reset",
+                "modeBarButtonsToRemove": [
+                    "pan2d",
+                    "select2d",
+                    "lasso2d",
+                    "zoomIn2d",
+                    "zoomOut2d"
+                ]
+            },
+            key="rainfall_distribution_fixed"
         )

@@ -2,22 +2,31 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
+
+# ============================================================
+# BANGLA NUMBER DISPLAY
+# ============================================================
+
+def bn_num(value, decimals=2, comma=False):
+    if comma:
+        text = f"{float(value):,.{decimals}f}"
+    else:
+        text = f"{float(value):.{decimals}f}"
+
+    return text.translate(str.maketrans(
+        "0123456789",
+        "০১২৩৪৫৬৭৮৯"
+    ))
+
+
 from services.agriculture import (
-
     CROPS,
-
     SOIL_TYPES,
-
     WATER_DEPTH_OPTIONS,
-
     convert_area_to_m2,
-
     convert_water_depth_to_mm,
-
     calculate_existing_water_volume,
-
     calculate_irrigation
-
 )
 
 
@@ -79,11 +88,8 @@ def show_agriculture():
         "বৃষ্টির তথ্যের উৎস (Rainfall Source)",
 
         [
-
             "বৃষ্টির পূর্বাভাস ব্যবহার করুন (Use Rain Prediction)",
-
             "নিজে বৃষ্টির পরিমাণ দিন (Manual Rainfall Input)"
-
         ]
 
     )
@@ -134,9 +140,9 @@ def show_agriculture():
             st.success(
 
                 f"""
-                বৃষ্টির পূর্বাভাস (Predicted Rainfall): {predicted_rain:.2f} mm
+                বৃষ্টির পূর্বাভাস (Predicted Rainfall): {bn_num(predicted_rain, 2)} mm
 
-                ET0 (Evapotranspiration): {et0_value:.2f}
+                ET0 (Evapotranspiration): {bn_num(et0_value, 2)}
                 """
 
             )
@@ -251,15 +257,10 @@ def show_agriculture():
         "জমির একক (Area Unit)",
 
         [
-
             "শতক (Decimal)",
-
             "একর (Acre)",
-
             "হেক্টর (Hectare)",
-
             "বর্গমিটার (Square Meter)"
-
         ]
 
     )
@@ -464,7 +465,7 @@ def show_agriculture():
 
         "আনুমানিক পানির গভীরতা (Estimated Water Depth)",
 
-        f"{existing_water_mm:.1f} mm"
+        f"{bn_num(existing_water_mm, 1)} mm"
 
     )
 
@@ -473,7 +474,7 @@ def show_agriculture():
 
         "আনুমানিক মোট পানি (Estimated Total Water)",
 
-        f"{existing_water_volume['water_liters']:,.0f} L"
+        f"{bn_num(existing_water_volume['water_liters'], 0, True)} L"
 
     )
 
@@ -482,7 +483,7 @@ def show_agriculture():
 
         "আনুমানিক পানির পরিমাণ (Estimated Water Volume)",
 
-        f"{existing_water_volume['water_m3']:.2f} m³"
+        f"{bn_num(existing_water_volume['water_m3'], 2)} m³"
 
     )
 
@@ -512,13 +513,9 @@ def show_agriculture():
         "সেচ পদ্ধতি নির্বাচন করুন (Select Irrigation Method)",
 
         [
-
             "সাধারণ সেচ (Traditional Irrigation)",
-
             "স্প্রিংকলার (Sprinkler)",
-
             "ড্রিপ সেচ (Drip Irrigation)"
-
         ]
 
     )
@@ -693,7 +690,7 @@ def show_agriculture():
 
             "ফসলের পানির চাহিদা (Crop Water Need)",
 
-            f"{result['crop_water_need']:.2f} mm"
+            f"{bn_num(result['crop_water_need'], 2)} mm"
 
         )
 
@@ -702,7 +699,7 @@ def show_agriculture():
 
             "কার্যকর বৃষ্টির পানি (Effective Rain)",
 
-            f"{result['effective_rain']:.2f} mm"
+            f"{bn_num(result['effective_rain'], 2)} mm"
 
         )
 
@@ -711,7 +708,7 @@ def show_agriculture():
 
             "মোট প্রয়োজনীয় পানি (Net Water Need)",
 
-            f"{result['net_water_needed']:.2f} mm"
+            f"{bn_num(result['net_water_needed'], 2)} mm"
 
         )
 
@@ -720,7 +717,7 @@ def show_agriculture():
 
             "প্রয়োজনীয় সেচের পানি (Irrigation Water)",
 
-            f"{result['gross_water_mm']:.2f} mm"
+            f"{bn_num(result['gross_water_mm'], 2)} mm"
 
         )
 
@@ -745,7 +742,7 @@ def show_agriculture():
 
             "লিটার (Liters)",
 
-            f"{result['water_liters']:,.0f} L"
+            f"{bn_num(result['water_liters'], 0, True)} L"
 
         )
 
@@ -754,7 +751,7 @@ def show_agriculture():
 
             "ঘনমিটার (Cubic Meter)",
 
-            f"{result['water_m3']:,.2f} m³"
+            f"{bn_num(result['water_m3'], 2, True)} m³"
 
         )
 
@@ -763,7 +760,7 @@ def show_agriculture():
 
             "জমির আয়তন (Land Area)",
 
-            f"{result['area_m2']:,.0f} m²"
+            f"{bn_num(result['area_m2'], 0, True)} m²"
 
         )
 
@@ -788,7 +785,7 @@ def show_agriculture():
 
             "পানির গভীরতা (Water Depth)",
 
-            f"{data['existing_water']:.1f} mm"
+            f"{bn_num(data['existing_water'], 1)} mm"
 
         )
 
@@ -797,7 +794,7 @@ def show_agriculture():
 
             "আনুমানিক মোট পানি (Estimated Total Water)",
 
-            f"{data['existing_water_liters']:,.0f} L"
+            f"{bn_num(data['existing_water_liters'], 0, True)} L"
 
         )
 
@@ -806,7 +803,7 @@ def show_agriculture():
 
             "আনুমানিক পানির পরিমাণ (Estimated Volume)",
 
-            f"{data['existing_water_m3']:.2f} m³"
+            f"{bn_num(data['existing_water_m3'], 2, True)} m³"
 
         )
 

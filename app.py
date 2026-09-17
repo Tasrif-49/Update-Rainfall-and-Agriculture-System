@@ -1,10 +1,7 @@
 import streamlit as st
 import plotly.io as pio
 
-
-# ============================================================
 # IMPORT SETTINGS
-# ============================================================
 
 from config.settings import (
     INDIGO,
@@ -15,11 +12,7 @@ from config.settings import (
     INK,
     LINE
 )
-
-
-# ============================================================
 # IMPORT SERVICES
-# ============================================================
 
 from services.data_loader import (
     load_model,

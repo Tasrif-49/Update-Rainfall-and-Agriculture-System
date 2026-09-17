@@ -1,0 +1,10 @@
+﻿Crop,Season,Cultivar,Start_MM_DD,End_MM_DD,Reference_Duration_Days,Source_Type,Source
+Rice,Boro,BRRI dhan28,01-15,04-29,105.0,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Rice,T. Aman,BRRI dhan49,07-25,11-06,104.0,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Rice,T. Aus,BRRI dhan48,04-15,07-18,95.0,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Mustard,Rabi,BARI Sharisha-14,11-20,02-07,80.0,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Wheat,Rabi,BARI Gom-26,12-01,03-20,110.0,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Potato,Rabi,BARI Alu-8,11-25,02-22,90.0,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Maize,Rabi/Kharif,Generic,,,,BARC/FAO_REFERENCE,Bangladesh Agricultural Research Council — Crop Zoning / Spatial Database / FAO Crop Water Needs / Crop Evapotranspiration
+Tomato,Rabi/Kharif,Generic,,,,BARC/FAO_REFERENCE,Bangladesh Agricultural Research Council — Crop Zoning / Spatial Database / FAO Crop Water Needs / Crop Evapotranspiration
+Onion,Rabi,Generic,,,,BARC/FAO_REFERENCE,Bangladesh Agricultural Research Council — Crop Zoning / Spatial Database / FAO Crop Water Needs / Crop Evapotranspiration

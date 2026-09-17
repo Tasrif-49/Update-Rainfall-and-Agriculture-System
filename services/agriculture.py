@@ -1,152 +1,35 @@
+from pathlib import Path
+from datetime import date, datetime
+import pandas as pd
+from services.voice import speak
+
+
 # ============================================================
-# CROPS
+# DATA PATH
 # ============================================================
 
-CROPS = {
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = PROJECT_ROOT / "data"
 
-    "ধান (Rice)": {
-        "name": "ধান (Rice)",
-        "water_mm": 7.0,
-        "min_mm": 4.0,
-        "max_mm": 10.0,
-        "description": "ধান সাধারণত বেশি পানি প্রয়োজন করে।",
-        "stage_factor": {
-
-            "চারা (Seedling)": 0.80,
-            "বৃদ্ধি (Vegetative)": 1.00,
-            "ফুল (Flowering)": 1.20,
-            "দানার বৃদ্ধি (Grain Filling)": 1.10,
-            "পাকা (Maturity)": 0.60
-
-        }
-    },
+CROP_REFERENCE_FILE = DATA_DIR / "01_bangladesh_crop_water_reference.csv"
+KC_REFERENCE_FILE = DATA_DIR / "02_crop_kc_reference.csv"
+CROP_CALENDAR_FILE = DATA_DIR / "03_bangladesh_crop_calendar.csv"
+LOCATION_IWR_FILE = DATA_DIR / "04_bangladesh_location_iwr_reference.csv"
 
 
-    "গম (Wheat)": {
-        "name": "গম (Wheat)",
-        "water_mm": 5.0,
-        "min_mm": 3.0,
-        "max_mm": 7.0,
-        "description": "গমের জন্য মাঝারি পরিমাণ পানি প্রয়োজন।",
-        "stage_factor": {
+# ============================================================
+# BANGLA / ENGLISH DISPLAY MAPS
+# ============================================================
 
-            "চারা (Seedling)": 0.70,
-            "বৃদ্ধি (Vegetative)": 1.00,
-            "ফুল (Flowering)": 1.20,
-            "দানার বৃদ্ধি (Grain Filling)": 1.10,
-            "পাকা (Maturity)": 0.50
+STAGE_LABELS = {
+    "Initial": "প্রাথমিক পর্যায় (Initial)",
+    "Development": "বৃদ্ধি পর্যায় (Development)",
+    "Mid": "মধ্য পর্যায় (Mid)",
+    "Late": "শেষ পর্যায় (Late)"
+}
 
-        }
-    },
-
-
-    "ভুট্টা (Maize)": {
-        "name": "ভুট্টা (Maize)",
-        "water_mm": 6.0,
-        "min_mm": 3.0,
-        "max_mm": 8.0,
-        "description": "ফুল ও দানা গঠনের সময়ে ভুট্টার বেশি পানি প্রয়োজন।",
-        "stage_factor": {
-
-            "চারা (Seedling)": 0.70,
-            "বৃদ্ধি (Vegetative)": 1.00,
-            "ফুল (Flowering)": 1.30,
-            "দানার বৃদ্ধি (Grain Filling)": 1.20,
-            "পাকা (Maturity)": 0.60
-
-        }
-    },
-
-
-    "আলু (Potato)": {
-        "name": "আলু (Potato)",
-        "water_mm": 5.0,
-        "min_mm": 3.0,
-        "max_mm": 7.0,
-        "description": "আলুর জমিতে অতিরিক্ত পানি জমে থাকা ক্ষতিকর।",
-        "stage_factor": {
-
-            "চারা (Seedling)": 0.70,
-            "বৃদ্ধি (Vegetative)": 1.00,
-            "ফুল (Flowering)": 1.20,
-            "দানার বৃদ্ধি (Grain Filling)": 1.00,
-            "পাকা (Maturity)": 0.60
-
-        }
-    },
-
-
-    "টমেটো (Tomato)": {
-        "name": "টমেটো (Tomato)",
-        "water_mm": 5.5,
-        "min_mm": 3.0,
-        "max_mm": 7.0,
-        "description": "টমেটোর জন্য নিয়মিত কিন্তু নিয়ন্ত্রিত সেচ প্রয়োজন।",
-        "stage_factor": {
-
-            "চারা (Seedling)": 0.70,
-            "বৃদ্ধি (Vegetative)": 1.00,
-            "ফুল (Flowering)": 1.20,
-            "দানার বৃদ্ধি (Grain Filling)": 1.20,
-            "পাকা (Maturity)": 0.80
-
-        }
-    },
-
-
-    "পেঁয়াজ (Onion)": {
-        "name": "পেঁয়াজ (Onion)",
-        "water_mm": 4.0,
-        "min_mm": 2.0,
-        "max_mm": 6.0,
-        "description": "অতিরিক্ত পানি পেঁয়াজের জন্য ক্ষতিকর হতে পারে।",
-        "stage_factor": {
-
-            "চারা (Seedling)": 0.70,
-            "বৃদ্ধি (Vegetative)": 1.00,
-            "ফুল (Flowering)": 1.00,
-            "দানার বৃদ্ধি (Grain Filling)": 0.90,
-            "পাকা (Maturity)": 0.50
-
-        }
-    },
-
-
-    "সবজি (Vegetables)": {
-        "name": "সবজি (Vegetables)",
-        "water_mm": 5.0,
-        "min_mm": 3.0,
-        "max_mm": 7.0,
-        "description": "সাধারণ সবজির জন্য মাঝারি পরিমাণ পানি প্রয়োজন।",
-        "stage_factor": {
-
-            "চারা (Seedling)": 0.70,
-            "বৃদ্ধি (Vegetative)": 1.00,
-            "ফুল (Flowering)": 1.20,
-            "দানার বৃদ্ধি (Grain Filling)": 1.00,
-            "পাকা (Maturity)": 0.70
-
-        }
-    },
-
-
-    "সরিষা (Mustard)": {
-        "name": "সরিষা (Mustard)",
-        "water_mm": 3.5,
-        "min_mm": 2.0,
-        "max_mm": 5.0,
-        "description": "সরিষার জন্য তুলনামূলক কম পানি প্রয়োজন।",
-        "stage_factor": {
-
-            "চারা (Seedling)": 0.70,
-            "বৃদ্ধি (Vegetative)": 1.00,
-            "ফুল (Flowering)": 1.20,
-            "দানার বৃদ্ধি (Grain Filling)": 1.00,
-            "পাকা (Maturity)": 0.50
-
-        }
-    }
-
+STAGE_FROM_LABEL = {
+    value: key for key, value in STAGE_LABELS.items()
 }
 
 
@@ -154,23 +37,21 @@ CROPS = {
 # SOIL TYPES
 # ============================================================
 
+# Soil is used for information/advisory only.
+# No arbitrary soil multiplier is applied in the irrigation calculation.
+
 SOIL_TYPES = {
 
     "বেলে মাটি (Sandy Soil)": {
-        "factor": 1.20,
-        "description": "বেলে মাটিতে পানি দ্রুত নিচে চলে যায়, তাই বেশি সেচ লাগতে পারে।"
+        "description": "বেলে মাটিতে পানি দ্রুত নিচে চলে যেতে পারে। প্রয়োজন হলে একবারে বেশি পানি না দিয়ে ভাগ করে সেচ দেওয়া যেতে পারে।"
     },
-
 
     "দোআঁশ মাটি (Loamy Soil)": {
-        "factor": 1.00,
-        "description": "দোআঁশ মাটির পানি ধারণক্ষমতা মাঝারি এবং ভালো।"
+        "description": "দোআঁশ মাটির পানি ধারণক্ষমতা সাধারণত মাঝারি এবং ফসলের জন্য উপযোগী।"
     },
 
-
     "এঁটেল মাটি (Clay Soil)": {
-        "factor": 0.85,
-        "description": "এঁটেল মাটি পানি বেশি সময় ধরে রাখতে পারে।"
+        "description": "এঁটেল মাটি পানি তুলনামূলক বেশি সময় ধরে রাখতে পারে। সেচের আগে জমিতে পানি জমে আছে কিনা দেখা প্রয়োজন।"
     }
 
 }
@@ -198,16 +79,754 @@ WATER_DEPTH_OPTIONS = {
 
 
 # ============================================================
+# BASIC HELPERS
+# ============================================================
+
+def _read_csv(path):
+
+    if not path.exists():
+
+        raise FileNotFoundError(
+            f"Required agriculture data file not found: {path}"
+        )
+
+    return pd.read_csv(path)
+
+
+def _safe_float(value):
+
+    if value is None or pd.isna(value):
+        return None
+
+    try:
+        return float(value)
+
+    except (TypeError, ValueError):
+        return None
+
+
+def _parse_mm_dd(mm_dd, year):
+
+    if mm_dd is None or pd.isna(mm_dd):
+        return None
+
+    text = str(mm_dd).strip()
+
+    if not text:
+        return None
+
+    try:
+        month, day = map(int, text.split("-"))
+        return date(year, month, day)
+
+    except (TypeError, ValueError):
+        return None
+
+
+def _stage_from_progress(progress):
+
+    if progress <= 0.20:
+        return "Initial"
+
+    elif progress <= 0.45:
+        return "Development"
+
+    elif progress <= 0.80:
+        return "Mid"
+
+    return "Late"
+
+
+# ============================================================
+# CSV LOADING
+# ============================================================
+
+def load_crop_reference():
+    return _read_csv(CROP_REFERENCE_FILE)
+
+
+def load_kc_reference():
+    return _read_csv(KC_REFERENCE_FILE)
+
+
+def load_crop_calendar():
+    return _read_csv(CROP_CALENDAR_FILE)
+
+
+def load_location_iwr_reference():
+
+    if not LOCATION_IWR_FILE.exists():
+
+        return pd.DataFrame(
+            columns=[
+                "Crop_or_Season",
+                "Location",
+                "Net_Irrigation_Reference_mm",
+                "Source_Type",
+                "Source"
+            ]
+        )
+
+    return pd.read_csv(LOCATION_IWR_FILE)
+
+
+# ============================================================
+# CROP / SEASON LOOKUP
+# ============================================================
+
+def get_crop_options():
+
+    df = load_crop_reference()
+
+    options = {}
+
+    for _, row in df.drop_duplicates(subset=["Crop"]).iterrows():
+
+        crop_en = str(row["Crop"]).strip()
+
+        crop_bn = (
+            str(row["Crop_Bangla"]).strip()
+            if pd.notna(row.get("Crop_Bangla"))
+            else crop_en
+        )
+
+        label = f"{crop_bn} ({crop_en})"
+
+        options[label] = crop_en
+
+    return options
+
+
+def get_season_options(crop):
+
+    df = load_crop_reference()
+
+    rows = df[
+        df["Crop"].astype(str).str.strip().str.lower()
+        ==
+        str(crop).strip().lower()
+    ].copy()
+
+    options = {}
+
+    for _, row in rows.iterrows():
+
+        season_en = str(row["Season"]).strip()
+
+        season_bn = (
+            str(row["Season_Bangla"]).strip()
+            if pd.notna(row.get("Season_Bangla"))
+            else season_en
+        )
+
+        label = f"{season_bn} ({season_en})"
+
+        options[label] = season_en
+
+    return options
+
+
+def get_crop_reference(crop, season):
+
+    df = load_crop_reference()
+
+    rows = df[
+        (
+            df["Crop"].astype(str).str.strip().str.lower()
+            ==
+            str(crop).strip().lower()
+        )
+        &
+        (
+            df["Season"].astype(str).str.strip().str.lower()
+            ==
+            str(season).strip().lower()
+        )
+    ]
+
+    if rows.empty:
+        return None
+
+    row = rows.iloc[0]
+
+    return {
+        "crop": row.get("Crop"),
+        "crop_bangla": row.get("Crop_Bangla"),
+        "season": row.get("Season"),
+        "season_bangla": row.get("Season_Bangla"),
+        "crop_group": row.get("Crop_Group"),
+        "growing_period": row.get("Growing_Period"),
+        "cultivar": row.get("Cultivar"),
+        "start_mm_dd": row.get("Start_MM_DD"),
+        "end_mm_dd": row.get("End_MM_DD"),
+        "duration_days": _safe_float(row.get("Reference_Duration_Days")),
+        "cwr_mm": _safe_float(row.get("Bangladesh_Study_CWR_mm")),
+        "iwr_mm": _safe_float(row.get("Bangladesh_Study_IWR_mm")),
+        "source_type": row.get("Source_Type"),
+        "source": row.get("Source"),
+        "database_status": row.get("Database_Status")
+    }
+
+
+# ============================================================
+# CROP CALENDAR
+# ============================================================
+
+def get_crop_calendar_record(crop, season):
+
+    df = load_crop_calendar()
+
+    rows = df[
+        (
+            df["Crop"].astype(str).str.strip().str.lower()
+            ==
+            str(crop).strip().lower()
+        )
+        &
+        (
+            df["Season"].astype(str).str.strip().str.lower()
+            ==
+            str(season).strip().lower()
+        )
+    ]
+
+    if rows.empty:
+        return None
+
+    row = rows.iloc[0]
+
+    return {
+        "crop": row.get("Crop"),
+        "season": row.get("Season"),
+        "cultivar": row.get("Cultivar"),
+        "start_mm_dd": row.get("Start_MM_DD"),
+        "end_mm_dd": row.get("End_MM_DD"),
+        "duration_days": _safe_float(row.get("Reference_Duration_Days")),
+        "source_type": row.get("Source_Type"),
+        "source": row.get("Source")
+    }
+
+
+def _make_reference_interval(start_mm_dd, end_mm_dd, start_year):
+
+    start_date = _parse_mm_dd(
+        start_mm_dd,
+        start_year
+    )
+
+    if start_date is None:
+        return None, None
+
+    end_same_year = _parse_mm_dd(
+        end_mm_dd,
+        start_year
+    )
+
+    if end_same_year is None:
+        return start_date, None
+
+    # If end month/day comes before start month/day,
+    # the crop season crosses into the next calendar year.
+    if end_same_year < start_date:
+
+        end_date = _parse_mm_dd(
+            end_mm_dd,
+            start_year + 1
+        )
+
+    else:
+
+        end_date = end_same_year
+
+    return start_date, end_date
+
+
+def resolve_reference_season(crop, season, calculation_date):
+
+    calendar = get_crop_calendar_record(
+        crop,
+        season
+    )
+
+    if not calendar:
+
+        return {
+            "available": False,
+            "in_season": None,
+            "start_date": None,
+            "end_date": None,
+            "calendar": None
+        }
+
+    start_raw = calendar.get("start_mm_dd")
+    end_raw = calendar.get("end_mm_dd")
+
+    if (
+        start_raw is None
+        or
+        pd.isna(start_raw)
+        or
+        end_raw is None
+        or
+        pd.isna(end_raw)
+    ):
+
+        return {
+            "available": False,
+            "in_season": None,
+            "start_date": None,
+            "end_date": None,
+            "calendar": calendar
+        }
+
+    if isinstance(calculation_date, datetime):
+        calculation_date = calculation_date.date()
+
+    candidate_intervals = []
+
+    for start_year in [
+        calculation_date.year - 1,
+        calculation_date.year,
+        calculation_date.year + 1
+    ]:
+
+        start_date, end_date = _make_reference_interval(
+            start_raw,
+            end_raw,
+            start_year
+        )
+
+        if start_date and end_date:
+
+            candidate_intervals.append(
+                (start_date, end_date)
+            )
+
+            if start_date <= calculation_date <= end_date:
+
+                return {
+                    "available": True,
+                    "in_season": True,
+                    "start_date": start_date,
+                    "end_date": end_date,
+                    "calendar": calendar
+                }
+
+    # If date is outside the reference season, return the closest interval
+    # so the UI can show the correct reference period.
+    if candidate_intervals:
+
+        closest = min(
+            candidate_intervals,
+            key=lambda item: min(
+                abs((calculation_date - item[0]).days),
+                abs((calculation_date - item[1]).days)
+            )
+        )
+
+        return {
+            "available": True,
+            "in_season": False,
+            "start_date": closest[0],
+            "end_date": closest[1],
+            "calendar": calendar
+        }
+
+    return {
+        "available": False,
+        "in_season": None,
+        "start_date": None,
+        "end_date": None,
+        "calendar": calendar
+    }
+
+
+# ============================================================
+# GROWTH STAGE
+# ============================================================
+
+def determine_growth_stage(
+    crop,
+    season,
+    calculation_date,
+    planting_date=None,
+    use_actual_planting_date=False
+):
+
+    calendar = get_crop_calendar_record(
+        crop,
+        season
+    )
+
+    if not calendar:
+
+        return {
+            "status": "NO_CALENDAR",
+            "available": False,
+            "stage": None,
+            "stage_label": None,
+            "day_of_crop": None,
+            "duration_days": None,
+            "progress": None,
+            "reference_start_date": None,
+            "reference_end_date": None,
+            "message": "এই ফসলের জন্য crop calendar data পাওয়া যায়নি।"
+        }
+
+    duration_days = calendar.get(
+        "duration_days"
+    )
+
+    if not duration_days or duration_days <= 0:
+
+        return {
+            "status": "NO_DURATION",
+            "available": False,
+            "stage": None,
+            "stage_label": None,
+            "day_of_crop": None,
+            "duration_days": duration_days,
+            "progress": None,
+            "reference_start_date": None,
+            "reference_end_date": None,
+            "message": "এই ফসলের জন্য reference duration পাওয়া যায়নি।"
+        }
+
+    if isinstance(calculation_date, datetime):
+        calculation_date = calculation_date.date()
+
+
+    # ========================================================
+    # ACTUAL FARMER PLANTING / TRANSPLANTING DATE
+    # ========================================================
+
+    if use_actual_planting_date:
+
+        if planting_date is None:
+
+            return {
+                "status": "INVALID_PLANTING_DATE",
+                "available": False,
+                "stage": None,
+                "stage_label": None,
+                "day_of_crop": None,
+                "duration_days": duration_days,
+                "progress": None,
+                "reference_start_date": None,
+                "reference_end_date": None,
+                "message": "প্রকৃত রোপণ/বপনের তারিখ নির্বাচন করুন।"
+            }
+
+        if isinstance(planting_date, datetime):
+            planting_date = planting_date.date()
+
+        if planting_date > calculation_date:
+
+            return {
+                "status": "FUTURE_PLANTING_DATE",
+                "available": False,
+                "stage": None,
+                "stage_label": None,
+                "day_of_crop": None,
+                "duration_days": duration_days,
+                "progress": None,
+                "reference_start_date": None,
+                "reference_end_date": None,
+                "message": "রোপণ/বপনের তারিখ হিসাবের তারিখের পরে হতে পারে না।"
+            }
+
+        day_of_crop = (
+            calculation_date
+            -
+            planting_date
+        ).days + 1
+
+        if day_of_crop > int(round(duration_days)):
+
+            return {
+                "status": "CROP_CYCLE_COMPLETE",
+                "available": False,
+                "stage": None,
+                "stage_label": None,
+                "day_of_crop": day_of_crop,
+                "duration_days": duration_days,
+                "progress": day_of_crop / float(duration_days),
+                "reference_start_date": None,
+                "reference_end_date": None,
+                "message": (
+                    "প্রকৃত রোপণ/বপনের তারিখ অনুযায়ী reference crop duration শেষ হয়ে গেছে। "
+                    "তারিখগুলো আবার যাচাই করুন।"
+                )
+            }
+
+        progress = (
+            day_of_crop
+            /
+            float(duration_days)
+        )
+
+        stage = _stage_from_progress(
+            progress
+        )
+
+        reference = resolve_reference_season(
+            crop,
+            season,
+            calculation_date
+        )
+
+        planting_reference = resolve_reference_season(
+            crop,
+            season,
+            planting_date
+        )
+
+        warning = None
+
+        if (
+            planting_reference.get("available")
+            and
+            planting_reference.get("in_season") is False
+        ):
+
+            warning = (
+                "প্রকৃত রোপণ/বপনের তারিখ reference crop calendar-এর বাইরে। "
+                "তবুও farmer-provided date অনুযায়ী stage হিসাব করা হয়েছে।"
+            )
+
+        return {
+            "status": "IN_SEASON_ACTUAL_DATE",
+            "available": True,
+            "stage": stage,
+            "stage_label": STAGE_LABELS[stage],
+            "day_of_crop": day_of_crop,
+            "duration_days": duration_days,
+            "progress": progress,
+            "reference_start_date": reference.get("start_date"),
+            "reference_end_date": reference.get("end_date"),
+            "message": (
+                "কৃষকের দেওয়া প্রকৃত রোপণ/বপনের তারিখ অনুযায়ী Growth Stage নির্ধারণ করা হয়েছে।"
+            ),
+            "warning": warning,
+            "planting_date": planting_date
+        }
+
+
+    # ========================================================
+    # REFERENCE CROP CALENDAR DATE
+    # ========================================================
+
+    reference = resolve_reference_season(
+        crop,
+        season,
+        calculation_date
+    )
+
+    if not reference.get("available"):
+
+        return {
+            "status": "NO_CALENDAR_DATES",
+            "available": False,
+            "stage": None,
+            "stage_label": None,
+            "day_of_crop": None,
+            "duration_days": duration_days,
+            "progress": None,
+            "reference_start_date": None,
+            "reference_end_date": None,
+            "message": (
+                "এই ফসলের জন্য automatic Growth Stage নির্ধারণের মতো "
+                "reference start/end date পাওয়া যায়নি।"
+            )
+        }
+
+    if not reference.get("in_season"):
+
+        return {
+            "status": "OUT_OF_SEASON",
+            "available": False,
+            "stage": None,
+            "stage_label": None,
+            "day_of_crop": None,
+            "duration_days": duration_days,
+            "progress": None,
+            "reference_start_date": reference.get("start_date"),
+            "reference_end_date": reference.get("end_date"),
+            "message": (
+                "নির্বাচিত তারিখটি এই ফসলের reference growing season-এর বাইরে।"
+            )
+        }
+
+    start_date = reference["start_date"]
+
+    day_of_crop = (
+        calculation_date
+        -
+        start_date
+    ).days + 1
+
+    # Calendar end date and reference duration can differ slightly.
+    # Stage is calculated using the reference duration.
+    progress = min(
+        day_of_crop / float(duration_days),
+        1.0
+    )
+
+    stage = _stage_from_progress(
+        progress
+    )
+
+    return {
+        "status": "IN_SEASON_REFERENCE",
+        "available": True,
+        "stage": stage,
+        "stage_label": STAGE_LABELS[stage],
+        "day_of_crop": day_of_crop,
+        "duration_days": duration_days,
+        "progress": progress,
+        "reference_start_date": reference.get("start_date"),
+        "reference_end_date": reference.get("end_date"),
+        "message": (
+            "Reference crop calendar অনুযায়ী Growth Stage স্বয়ংক্রিয়ভাবে নির্ধারণ করা হয়েছে।"
+        ),
+        "warning": None,
+        "planting_date": start_date
+    }
+
+
+# ============================================================
+# Kc LOOKUP
+# ============================================================
+
+def get_kc(crop, growth_stage):
+
+    df = load_kc_reference()
+
+    rows = df[
+        (
+            df["Crop"].astype(str).str.strip().str.lower()
+            ==
+            str(crop).strip().lower()
+        )
+        &
+        (
+            df["Growth_Stage"].astype(str).str.strip().str.lower()
+            ==
+            str(growth_stage).strip().lower()
+        )
+    ]
+
+    if rows.empty:
+        return None
+
+    row = rows.iloc[0]
+
+    return {
+        "kc": float(row["Kc"]),
+        "source_type": row.get("Kc_Source_Type"),
+        "source": row.get("Kc_Source")
+    }
+
+
+# ============================================================
+# LOCATION-WISE SEASONAL IWR REFERENCE
+# ============================================================
+
+def _location_reference_key(crop, season):
+
+    if str(crop).strip().lower() == "rice":
+        return str(season).strip()
+
+    return str(crop).strip()
+
+
+def get_location_options(crop, season):
+
+    df = load_location_iwr_reference()
+
+    if df.empty:
+        return []
+
+    key = _location_reference_key(
+        crop,
+        season
+    )
+
+    rows = df[
+        df["Crop_or_Season"].astype(str).str.strip().str.lower()
+        ==
+        key.lower()
+    ]
+
+    return sorted(
+        rows["Location"]
+        .dropna()
+        .astype(str)
+        .unique()
+        .tolist()
+    )
+
+
+def get_location_iwr_reference(
+    crop,
+    season,
+    location
+):
+
+    df = load_location_iwr_reference()
+
+    if df.empty or not location:
+        return None
+
+    key = _location_reference_key(
+        crop,
+        season
+    )
+
+    rows = df[
+        (
+            df["Crop_or_Season"].astype(str).str.strip().str.lower()
+            ==
+            key.lower()
+        )
+        &
+        (
+            df["Location"].astype(str).str.strip().str.lower()
+            ==
+            str(location).strip().lower()
+        )
+    ]
+
+    if rows.empty:
+        return None
+
+    row = rows.iloc[0]
+
+    return {
+        "crop_or_season": row.get("Crop_or_Season"),
+        "location": row.get("Location"),
+        "net_iwr_reference_mm": _safe_float(
+            row.get("Net_Irrigation_Reference_mm")
+        ),
+        "source_type": row.get("Source_Type"),
+        "source": row.get("Source")
+    }
+
+
+# ============================================================
 # AREA CONVERSION
 # ============================================================
 
-def convert_area_to_m2(land_area, area_unit):
+def convert_area_to_m2(
+    land_area,
+    area_unit
+):
 
     if area_unit == "শতক (Decimal)":
         return land_area * 40.4686
 
     elif area_unit == "একর (Acre)":
-        return land_area * 4046.86
+        return land_area * 4046.8564
 
     elif area_unit == "হেক্টর (Hectare)":
         return land_area * 10000
@@ -226,7 +845,6 @@ def convert_water_depth_to_mm(
 ):
 
     if water_measurement == "নিজে পরিমাপ দিন (Custom Measurement)":
-
         return custom_depth_cm * 10
 
     return WATER_DEPTH_OPTIONS.get(
@@ -265,6 +883,47 @@ def calculate_existing_water_volume(
 
 
 # ============================================================
+# EFFECTIVE RAINFALL
+# ============================================================
+
+def calculate_effective_rainfall(
+    predicted_rain_mm
+):
+
+    predicted_rain_mm = max(
+        float(predicted_rain_mm),
+        0.0
+    )
+
+    # Simplified planning assumption.
+    # This is not claimed as a universal physical law.
+
+    if predicted_rain_mm <= 5:
+
+        return (
+            predicted_rain_mm
+            *
+            0.90
+        )
+
+    elif predicted_rain_mm <= 20:
+
+        return (
+            predicted_rain_mm
+            *
+            0.80
+        )
+
+    else:
+
+        return (
+            predicted_rain_mm
+            *
+            0.65
+        )
+
+
+# ============================================================
 # CALCULATE IRRIGATION
 # ============================================================
 
@@ -286,163 +945,107 @@ def calculate_irrigation(
 
     et0_value,
 
-    irrigation_efficiency
+    irrigation_efficiency,
+
+    manual_crop_water_need_mm=None
 
 ):
-
-
-    crop = CROPS[crop_name]
-
-    soil = SOIL_TYPES[soil_type]
-
 
     # ========================================================
     # AREA
     # ========================================================
 
     area_m2 = convert_area_to_m2(
-
         land_area,
-
         area_unit
-
     )
 
 
     # ========================================================
-    # CROP WATER REQUIREMENT
+    # Kc
     # ========================================================
 
-    base_crop_water = crop["water_mm"]
-
-    stage_factor = crop["stage_factor"][crop_stage]
-
-    soil_factor = soil["factor"]
-
-
-    crop_water_need = (
-
-        base_crop_water
-
-        *
-
-        stage_factor
-
-        *
-
-        soil_factor
-
+    kc_record = get_kc(
+        crop_name,
+        crop_stage
     )
 
+    if kc_record is None:
 
-    # ========================================================
-    # ET0 FACTOR
-    # ========================================================
-
-    if et0_value > 0:
-
-        et_factor = min(
-
-            max(
-
-                et0_value / 5,
-
-                0.70
-
-            ),
-
-            1.40
-
+        raise ValueError(
+            f"Kc value পাওয়া যায়নি: Crop={crop_name}, Stage={crop_stage}"
         )
+
+    kc = kc_record["kc"]
+
+
+    # ========================================================
+    # AUTOMATIC CROP WATER REQUIREMENT
+    # ETc = ET0 × Kc
+    # ========================================================
+
+    et0_mm = max(
+        float(et0_value),
+        0.0
+    )
+
+    automatic_etc_mm = (
+        et0_mm
+        *
+        kc
+    )
+
+
+    # ========================================================
+    # WATER REQUIREMENT METHOD
+    # ========================================================
+
+    if manual_crop_water_need_mm is not None:
+
+        crop_water_need = max(
+            float(manual_crop_water_need_mm),
+            0.0
+        )
+
+        water_requirement_method = "MANUAL"
 
     else:
 
-        et_factor = 1.0
+        crop_water_need = automatic_etc_mm
 
-
-    crop_water_need = (
-
-        crop_water_need
-
-        *
-
-        et_factor
-
-    )
+        water_requirement_method = "AUTOMATIC_ETC"
 
 
     # ========================================================
     # EFFECTIVE RAINFALL
     # ========================================================
 
-    if predicted_rain_mm <= 5:
-
-        effective_rain = (
-
-            predicted_rain_mm
-
-            *
-
-            0.90
-
-        )
-
-
-    elif predicted_rain_mm <= 20:
-
-        effective_rain = (
-
-            predicted_rain_mm
-
-            *
-
-            0.80
-
-        )
-
-
-    else:
-
-        effective_rain = (
-
-            predicted_rain_mm
-
-            *
-
-            0.65
-
-        )
+    effective_rain = calculate_effective_rainfall(
+        predicted_rain_mm
+    )
 
 
     # ========================================================
     # AVAILABLE WATER
     # ========================================================
 
-    available_water = (
-
-        existing_water_mm
-
-        +
-
-        effective_rain
-
+    available_water = max(
+        float(existing_water_mm),
+        0.0
     )
 
 
     # ========================================================
-    # NET WATER REQUIREMENT
+    # NET IRRIGATION REQUIREMENT
     # ========================================================
 
     net_water_needed = max(
-
         crop_water_need
-
         -
-
+        effective_rain
+        -
         available_water,
-
         0
-
     )
 
 
@@ -451,22 +1054,22 @@ def calculate_irrigation(
     # ========================================================
 
     efficiency = max(
-
-        irrigation_efficiency / 100,
-
+        min(
+            float(irrigation_efficiency) / 100,
+            1.0
+        ),
         0.10
-
     )
 
 
+    # ========================================================
+    # GROSS IRRIGATION REQUIREMENT
+    # ========================================================
+
     gross_water_mm = (
-
         net_water_needed
-
         /
-
         efficiency
-
     )
 
 
@@ -477,24 +1080,15 @@ def calculate_irrigation(
     # 1 mm water over 1 m² = 1 liter
 
     water_liters = (
-
         gross_water_mm
-
         *
-
         area_m2
-
     )
 
-
     water_m3 = (
-
         water_liters
-
         /
-
         1000
-
     )
 
 
@@ -502,7 +1096,7 @@ def calculate_irrigation(
     # STATUS
     # ========================================================
 
-    if net_water_needed <= 0.5:
+    if net_water_needed <= 0:
 
         status = "NO_IRRIGATION"
 
@@ -542,11 +1136,26 @@ def calculate_irrigation(
 
         "area_m2": area_m2,
 
+        "et0_mm": et0_mm,
+
+        "kc": kc,
+
+        "automatic_etc_mm": automatic_etc_mm,
+
+        "etc_mm": automatic_etc_mm,
+
         "crop_water_need": crop_water_need,
+
+        "water_requirement_method": water_requirement_method,
+
+        "predicted_rain": max(
+            float(predicted_rain_mm),
+            0.0
+        ),
 
         "effective_rain": effective_rain,
 
-        "existing_water": existing_water_mm,
+        "existing_water": available_water,
 
         "available_water": available_water,
 
@@ -554,9 +1163,17 @@ def calculate_irrigation(
 
         "gross_water_mm": gross_water_mm,
 
+        "irrigation_efficiency": efficiency * 100,
+
         "water_liters": water_liters,
 
         "water_m3": water_m3,
+
+        "kc_source_type": kc_record.get("source_type"),
+
+        "kc_source": kc_record.get("source"),
+
+        "soil_type": soil_type,
 
         "status": status,
 

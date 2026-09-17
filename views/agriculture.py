@@ -1004,7 +1004,9 @@ def show_agriculture():
 
             xaxis_title="",
 
-            yaxis_title="পানির পরিমাণ (Water in mm)"
+            yaxis_title="পানির পরিমাণ (Water in mm)",
+
+            dragmode=False
 
         )
 
@@ -1013,6 +1015,30 @@ def show_agriculture():
 
             fig,
 
-            width="stretch"
+            width="stretch",
+
+            config={
+
+                "scrollZoom": False,
+
+                "doubleClick": False,
+
+                "displayModeBar": True,
+
+                "dragmode": False,
+
+                "modeBarButtonsToRemove": [
+
+                    "pan2d",
+
+                    "select2d",
+
+                    "lasso2d",
+
+                    "autoScale2d"
+
+                ]
+
+            }
 
         )

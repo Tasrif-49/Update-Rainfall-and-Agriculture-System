@@ -1,0 +1,29 @@
+﻿Crop,Growth_Stage,Kc,Kc_Source_Type,Kc_Source
+Rice,Initial,1.09,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Rice,Development,1.12,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Rice,Mid,1.14,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Rice,Late,1.08,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Wheat,Initial,0.42,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Wheat,Development,0.78,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Wheat,Mid,1.13,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Wheat,Late,0.48,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Maize,Initial,0.38,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Maize,Development,0.87,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Maize,Mid,1.36,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Maize,Late,0.75,BANGLADESH_CROPWAT,"Hossain et al. (2020), Irrigation Strategy for Crop Production in Northwest and Southwest Region of Bangladesh"
+Potato,Initial,0.45,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Potato,Development,0.75,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Potato,Mid,1.15,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Potato,Late,0.85,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Tomato,Initial,0.45,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Tomato,Development,0.75,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Tomato,Mid,1.15,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Tomato,Late,0.8,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Onion,Initial,0.5,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Onion,Development,0.75,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Onion,Mid,1.05,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Onion,Late,0.85,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Mustard,Initial,0.45,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Mustard,Development,0.75,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Mustard,Mid,1.1,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration
+Mustard,Late,0.5,FAO_REFERENCE,FAO Crop Water Needs / Crop Evapotranspiration

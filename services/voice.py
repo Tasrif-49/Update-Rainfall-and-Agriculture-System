@@ -1,372 +1,628 @@
-from gtts import gTTS
-import os
-import hashlib
-import playsound
-import threading
-import time
+# services/voice.py
+
+import io
 import re
+import hashlib
 
-VOICE_CACHE_DIR = "voice_cache"
-os.makedirs(VOICE_CACHE_DIR, exist_ok=True)
-
-_VOICE_FILE_CACHE = {}
-_VOICE_GENERATION_LOCK = threading.Lock()
-_VOICE_PLAY_LOCK = threading.Lock()
-
-_WELCOME_LOCK = threading.Lock()
-_WELCOME_PLAYING = False
-_WELCOME_PLAYED = False
-
-_VOICE_STATE_LOCK = threading.Lock()
-_VOICE_TOKEN = 0
-
-_SELECTION_LOCK = threading.Lock()
-_LAST_SELECTION_TEXT = {}
-
-_SECTION_LOCK = threading.Lock()
-_LAST_SECTION_TEXT = {}
-
-BANGLA_RANGE = r"\u0980-\u09FF"
+import streamlit as st
+from gtts import gTTS
 
 
-def contains_bangla(text):
-    if text is None:
-        return False
-    return re.search(f"[{BANGLA_RANGE}]", str(text)) is not None
+# ============================================================
+# SESSION STATE INITIALIZATION
+# ============================================================
 
+def _init_voice_state():
+    defaults = {
+        "voice_audio": None,
+        "voice_version": 0,
+        "voice_rendered_version": -1,
+        "voice_hash": None,
+    }
+
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+
+# ============================================================
+# BANGLA TEXT CLEANER
+# ============================================================
 
 def clean_voice_text(text):
+    """
+    TTS-এর জন্য শুধুমাত্র Bangla অংশ রাখে।
+
+    English UI text বাদ যাবে:
+        ET0
+        Acre
+        Hectare
+        Drip
+        Sprinkler
+        Traditional
+        Rice
+        Tomato
+        etc.
+
+    Bangla:
+        থাকবে
+
+    Bangla digits:
+        থাকবে
+    """
+
     if text is None:
         return ""
 
-    text = str(text).strip()
-    if not text:
-        return ""
+    text = str(text)
 
-    # Remove English UI words, while keeping Bangla text and numbers.
-    english_patterns = [
-        r"\bSelect\b", r"\bselected\b", r"\bselection\b",
-        r"\bCrop\b", r"\bSeason\b", r"\bSoil\b", r"\bWater\b",
-        r"\bRainfall\b", r"\bPrediction\b", r"\bPredicted\b",
-        r"\bIrrigation\b", r"\bMethod\b",
-        r"\bTraditional\b", r"\bSprinkler\b", r"\bDrip\b",
-        r"\bCustom\b", r"\bMeasurement\b", r"\bCalculate\b",
-        r"\bSmart\b", r"\bAgriculture\b", r"\bRecommendation\b",
-        r"\bAutomatic\b", r"\bManual\b", r"\bOverride\b",
-        r"\bRecommended\b", r"\bET0\b", r"\bETc\b", r"\bKc\b",
-        r"\bmm\b", r"\bday\b", r"\bDaily\b", r"\bReference\b",
-        r"\bEvapotranspiration\b", r"\bInformation\b", r"\bInput\b",
-        r"\bOutput\b", r"\bResult\b", r"\bDetails\b", r"\bCurrent\b",
-        r"\bStage\b", r"\bGrowth\b", r"\bInitial\b", r"\bDevelopment\b",
-        r"\bMid\b", r"\bLate\b", r"\bArea\b", r"\bUnit\b",
-        r"\bLand\b", r"\bExisting\b", r"\bEfficiency\b",
-        r"\bPlanting\b", r"\bSowing\b", r"\bToday's\b",
-        r"\bReference\b", r"\bWater\b"
-    ]
+    # --------------------------------------------------------
+    # HTML / TAG REMOVE
+    # --------------------------------------------------------
 
-    for pattern in english_patterns:
-        text = re.sub(pattern, "", text, flags=re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", " ", text)
+
+    # --------------------------------------------------------
+    # URL / EMAIL REMOVE
+    # --------------------------------------------------------
 
     text = re.sub(
-        r"\([^()\u0980-\u09FF]*[A-Za-z][^()\u0980-\u09FF]*\)",
-        "",
+        r"https?://\S+|www\.\S+",
+        " ",
+        text,
+        flags=re.IGNORECASE
+    )
+
+    text = re.sub(
+        r"\S+@\S+\.\S+",
+        " ",
         text
     )
-    text = re.sub(r"[A-Za-z]+", "", text)
-    text = re.sub(r"[_|<>]+", " ", text)
-    text = re.sub(r"\s+", " ", text).strip()
+
+    # --------------------------------------------------------
+    # ENGLISH WORDS REMOVE
+    # --------------------------------------------------------
+
+    text = re.sub(
+        r"[A-Za-z]+",
+        " ",
+        text
+    )
+
+    # --------------------------------------------------------
+    # COMMON SYMBOLS REMOVE
+    # --------------------------------------------------------
+
+    text = re.sub(
+        r"[_|/\\]+",
+        " ",
+        text
+    )
+
+    # Keep:
+    # Bangla Unicode
+    # Bangla digits
+    # English digits
+    # Bangla punctuation
+    # Normal punctuation
+
+    text = re.sub(
+        r"[^\u0980-\u09FF\u09E6-\u09EF0-9\s।,!?;:%\-–—()]+",
+        " ",
+        text
+    )
+
+    # --------------------------------------------------------
+    # REMOVE EXTRA PUNCTUATION
+    # --------------------------------------------------------
+
+    text = re.sub(
+        r"[-–—]+",
+        " ",
+        text
+    )
+
+    # --------------------------------------------------------
+    # EMPTY BRACKETS
+    # --------------------------------------------------------
+    # English বাদ দেওয়ার পর "( )" পড়ে থাকে।
+    # gTTS-এ এগুলো অপ্রয়োজনীয় বিরতি তৈরি করে।
+
+    text = re.sub(
+        r"\(\s*\)",
+        " ",
+        text
+    )
+
+    # --------------------------------------------------------
+    # NORMALIZE SPACES
+    # --------------------------------------------------------
+
+    text = re.sub(
+        r"\s+",
+        " ",
+        text
+    ).strip()
 
     return text
 
 
-def get_voice_filename(text):
-    text = str(text)
-    text_hash = hashlib.md5(text.encode("utf-8")).hexdigest()
-    return os.path.join(VOICE_CACHE_DIR, f"{text_hash}.mp3")
+# ============================================================
+# BANGLA NUMBER CONVERSION
+# ============================================================
+
+def _english_digits_to_bangla(text):
+    table = str.maketrans(
+        "0123456789",
+        "০১২৩৪৫৬৭৮৯"
+    )
+
+    return text.translate(table)
 
 
-def generate_voice(text):
+# ============================================================
+# PREPARE VOICE TEXT
+# ============================================================
+
+def _prepare_voice_text(text):
+    """
+    Voice-এর আগে English বাদ দিয়ে Bangla text তৈরি করে।
+    """
+
     text = clean_voice_text(text)
+
     if not text:
-        return None
+        return ""
 
-    cached = _VOICE_FILE_CACHE.get(text)
-    if cached and os.path.exists(cached):
-        return cached
+    # English numbers → Bangla numbers
+    text = _english_digits_to_bangla(text)
 
-    filename = get_voice_filename(text)
+    # Extra spaces
+    text = re.sub(
+        r"\s+",
+        " ",
+        text
+    ).strip()
 
-    if os.path.exists(filename):
-        _VOICE_FILE_CACHE[text] = filename
-        return filename
-
-    try:
-        with _VOICE_GENERATION_LOCK:
-            if os.path.exists(filename):
-                _VOICE_FILE_CACHE[text] = filename
-                return filename
-
-            tts = gTTS(text=text, lang="bn")
-            tts.save(filename)
-
-        _VOICE_FILE_CACHE[text] = filename
-        return filename
-
-    except Exception as e:
-        print("Voice Generate Error:", e)
-        return None
+    return text
 
 
-def _new_voice_token():
-    global _VOICE_TOKEN
+# ============================================================
+# GENERATE MP3
+# ============================================================
 
-    with _VOICE_STATE_LOCK:
-        _VOICE_TOKEN += 1
-        return _VOICE_TOKEN
-
-
-def _voice_token_valid(token):
-    with _VOICE_STATE_LOCK:
-        return token == _VOICE_TOKEN
-
-
-def cancel_pending_voice():
-    _new_voice_token()
-
-
-def _play_file(filename, token=None):
+def _generate_audio(text):
     """
-    Play only if the token is still current.
-    The lock is acquired in short intervals so an obsolete pending
-    voice never waits behind an old voice and then plays later.
+    gTTS দিয়ে Bangla MP3 তৈরি করে।
     """
-    if not filename:
-        return False
 
-    try:
-        while True:
-            if token is not None and not _voice_token_valid(token):
-                return False
-
-            acquired = _VOICE_PLAY_LOCK.acquire(timeout=0.05)
-
-            if acquired:
-                break
-
-        try:
-            if token is not None and not _voice_token_valid(token):
-                return False
-
-            playsound.playsound(filename)
-            return True
-
-        finally:
-            _VOICE_PLAY_LOCK.release()
-
-    except Exception as e:
-        print("Voice Play Error:", e)
-        return False
-
-
-def play_welcome(text, delay=0.5):
-    global _WELCOME_PLAYING
-    global _WELCOME_PLAYED
-
-    with _WELCOME_LOCK:
-        if _WELCOME_PLAYED:
-            return
-
-        _WELCOME_PLAYED = True
-        _WELCOME_PLAYING = True
-
-    def run():
-        global _WELCOME_PLAYING
-
-        try:
-            if delay > 0:
-                time.sleep(delay)
-
-            filename = generate_voice(text)
-
-            if filename:
-                _play_file(filename)
-
-        except Exception as e:
-            print("Welcome Voice Error:", e)
-
-        finally:
-            with _WELCOME_LOCK:
-                _WELCOME_PLAYING = False
-
-    threading.Thread(target=run, daemon=True).start()
-
-
-def is_welcome_playing():
-    with _WELCOME_LOCK:
-        return _WELCOME_PLAYING
-
-
-def reset_welcome_voice():
-    global _WELCOME_PLAYING
-    global _WELCOME_PLAYED
-
-    with _WELCOME_LOCK:
-        _WELCOME_PLAYING = False
-        _WELCOME_PLAYED = False
-
-
-def _wait_for_welcome(token):
-    while is_welcome_playing():
-        if not _voice_token_valid(token):
-            return False
-        time.sleep(0.08)
-
-    return _voice_token_valid(token)
-
-
-def _run_voice_sequence(texts, delay=0.10):
-    """
-    One token owns the entire sequence.
-    A newer interaction cancels the whole old sequence.
-    """
-    clean_texts = []
-
-    for text in texts:
-        cleaned = clean_voice_text(text)
-        if cleaned and cleaned not in clean_texts:
-            clean_texts.append(cleaned)
-
-    if not clean_texts:
-        return
-
-    token = _new_voice_token()
-
-    def run():
-        if delay > 0:
-            time.sleep(delay)
-
-        if not _wait_for_welcome(token):
-            return
-
-        for text in clean_texts:
-            if not _voice_token_valid(token):
-                return
-
-            filename = generate_voice(text)
-
-            if not filename:
-                return
-
-            if not _voice_token_valid(token):
-                return
-
-            if not _play_file(filename, token=token):
-                return
-
-    threading.Thread(target=run, daemon=True).start()
-
-
-def speak_sequence(texts, delay=0.05):
-    """
-    Speak a short ordered sequence as ONE voice job.
-
-    A newer job cancels any older pending job. This is the main
-    Streamlit-friendly entry point for: selection -> next instruction.
-    """
-    if isinstance(texts, str):
-        texts = [texts]
-    _run_voice_sequence(list(texts), delay=delay)
-
-
-def section_voice(text, key="general_section", delay=0.10):
-    clean_text = clean_voice_text(text)
+    clean_text = _prepare_voice_text(text)
 
     if not clean_text:
+        return None
+
+    try:
+        audio_buffer = io.BytesIO()
+
+        tts = gTTS(
+            text=clean_text,
+            lang="bn",
+            slow=False
+        )
+
+        tts.write_to_fp(audio_buffer)
+
+        audio_buffer.seek(0)
+
+        return audio_buffer.getvalue()
+
+    except Exception:
+        # Internet না থাকলে অথবা gTTS fail করলে
+        # UI যেন crash না করে।
+        return None
+
+
+# ============================================================
+# SPEAK SEQUENCE
+# ============================================================
+
+def speak_sequence(messages, delay=0.0):
+    """
+    একাধিক voice message sequentially handle করে।
+
+    Agriculture Result Card-এর জন্য:
+        - একই সময়ে অনেক voice trigger হবে না
+        - সব message একসাথে একটি Bangla audio-তে যাবে
+        - English UI words বাদ যাবে
+        - duplicate audio regeneration এড়ানো হবে
+    """
+
+    _init_voice_state()
+
+    if not messages:
         return
 
-    with _SECTION_LOCK:
-        previous_text = _LAST_SECTION_TEXT.get(key)
+    prepared_messages = []
 
-        if previous_text == clean_text:
-            return
+    for message in messages:
 
-        _LAST_SECTION_TEXT[key] = clean_text
+        cleaned = _prepare_voice_text(message)
 
-    _run_voice_sequence([clean_text], delay=delay)
+        if cleaned:
+            prepared_messages.append(cleaned)
 
+    if not prepared_messages:
+        return
+
+    # একই result-এর main points একসাথে বলা হবে।
+    final_text = " । ".join(prepared_messages)
+
+    voice_hash = hashlib.md5(
+        final_text.encode("utf-8")
+    ).hexdigest()
+
+    # একই voice আবার generate করবে না।
+    if st.session_state.get("voice_hash") == voice_hash:
+        return
+
+    audio = _generate_audio(final_text)
+
+    if audio is None:
+        return
+
+    st.session_state["voice_audio"] = audio
+    st.session_state["voice_hash"] = voice_hash
+
+    st.session_state["voice_version"] = (
+        st.session_state.get("voice_version", 0) + 1
+    )
+
+
+# ============================================================
+# RESET VOICE HASH
+# ============================================================
+
+def reset_voice_hash():
+    """
+    Duplicate-guard clear করে।
+
+    একই text আবার বাজাতে হলে (যেমন Calculate বা
+    Smart Recommendation বাটনে দ্বিতীয়বার চাপ দিলে)
+    speak_sequence() আগের hash দেখে চুপ করে থাকত।
+    এই helper সেই hash মুছে দেয়।
+
+    আগে page থেকে সরাসরি
+        st.session_state["voice_hash"] = None
+    লেখা হতো। এখন সেটি এখানে কেন্দ্রীভূত।
+    """
+
+    _init_voice_state()
+
+    st.session_state["voice_hash"] = None
+
+
+# ============================================================
+# GROWTH STAGE VOICE
+# ============================================================
+
+def growth_stage_auto_voice(
+    stage_label,
+    next_instruction="মাটির ধরন নির্বাচন করুন"
+):
+    """
+    Automatic growth stage announce করে, তারপর একটু বিরতি দিয়ে
+    পরবর্তী ধাপের instruction বলে।
+
+    কেন বিরতি:
+    কৃষক যদি বৃদ্ধি পর্যায় না বদলায়, তবুও voice flow যেন থেমে
+    না যায়। আগে এখানে flow থেমে যেত — কৃষক stage select না করলে
+    পরের কোনো instruction বাজত না।
+
+    PAUSE_TOKEN ("।") gTTS-এ একটি ছোট বিরতি তৈরি করে।
+    তিনটি token ≈ ২-৩ সেকেন্ড বিরতি দেয়।
+    """
+
+    if not stage_label:
+        return
+
+    PAUSE_TOKEN = "।"
+
+    messages = [
+        f"স্বয়ংক্রিয়ভাবে আপনার ফসলের পর্যায় নির্ধারণ করা হয়েছে {stage_label}।",
+        "আপনি চাইলে উপরের বৃদ্ধি পর্যায় থেকে অন্য পর্যায় নির্বাচন করতে পারেন।"
+    ]
+
+    if next_instruction:
+
+        messages.extend([
+            PAUSE_TOKEN,
+            PAUSE_TOKEN,
+            PAUSE_TOKEN,
+            next_instruction
+        ])
+
+    speak_sequence(messages, delay=0.10)
+
+
+# ============================================================
+# AGRICULTURE RESULT VOICE
+# ============================================================
+
+def agriculture_result_voice(
+    irrigation_needed,
+    water_liters=0,
+    gross_irrigation=0,
+    available_water=0,
+    effective_rain=0,
+    net_irrigation=0,
+    no_rain_message="",
+):
+    """
+    Agriculture Result Card-এর জন্য farmer-friendly main voice।
+
+    Voice-এ technical calculation যেমন ET0, Kc, formula ইত্যাদি
+    বলা হবে না। শুধু farmer-এর জন্য প্রয়োজনীয় সিদ্ধান্ত বলা হবে।
+    """
+
+    messages = []
+
+    # --------------------------------------------------------
+    # 1. MAIN DECISION
+    # --------------------------------------------------------
+
+    if irrigation_needed:
+
+        messages.append(
+            f"আজ আপনার জমিতে সেচ প্রয়োজন। "
+            f"প্রায় {water_liters:.0f} লিটার পানি "
+            f"অথবা {gross_irrigation:.1f} মিলিমিটার সেচ দিতে হবে।"
+        )
+
+    else:
+
+        messages.append(
+            "আজ আপনার জমিতে অতিরিক্ত সেচ দেওয়ার প্রয়োজন নেই। "
+            "জমিতে থাকা পানি এবং বৃষ্টির পানি "
+            "বর্তমান প্রয়োজন মেটাতে যথেষ্ট।"
+        )
+
+    # --------------------------------------------------------
+    # 2. WATER BALANCE
+    # --------------------------------------------------------
+
+    if irrigation_needed:
+
+        messages.append(
+            f"জমিতে থাকা পানি {available_water:.1f} মিলিমিটার "
+            f"এবং কার্যকর বৃষ্টির পানি {effective_rain:.1f} মিলিমিটার। "
+            f"সব বাদ দেওয়ার পর পানির ঘাটতি "
+            f"{net_irrigation:.1f} মিলিমিটার।"
+        )
+
+    # --------------------------------------------------------
+    # 3. NO RAIN DECISION
+    # --------------------------------------------------------
+    # এই message result card-এও হুবহু লেখা দেখানো হয়।
+
+    if no_rain_message:
+        messages.append(no_rain_message)
+
+    speak_sequence(messages)
+
+
+# ============================================================
+# SMART RECOMMENDATION VOICE
+# ============================================================
+#
+# NOTE:
+# আগের ফাইলে এই function দুইবার define করা ছিল।
+# Python দ্বিতীয়টিকেই রাখত, প্রথমটি চুপচাপ overwrite হয়ে যেত।
+# এখন একটিই রাখা হয়েছে।
+# ============================================================
+
+def agriculture_recommendation_voice(recommendations):
+    """
+    Smart Recommendation-এর voice।
+
+    User চাইলে আলাদাভাবে recommendation শুনবে।
+    """
+
+    if not recommendations:
+        return
+
+    if isinstance(recommendations, str):
+        messages = [recommendations]
+    else:
+        messages = list(recommendations)
+
+    speak_sequence(messages)
+
+
+# ============================================================
+# SIMPLE SINGLE VOICE
+# ============================================================
+
+def speak(text, delay=0.0):
+    """
+    Single Bangla voice.
+    """
+
+    if not text:
+        return
+
+    speak_sequence(
+        [text],
+        delay=delay
+    )
+
+
+# ============================================================
+# PLAY VOICE
+# ============================================================
+
+def play_voice(text, delay=0.0):
+    """
+    Backward compatibility.
+    """
+
+    speak(
+        text,
+        delay=delay
+    )
+
+
+# ============================================================
+# WELCOME VOICE
+# ============================================================
+
+def play_welcome(text):
+    """
+    Welcome voice.
+    """
+
+    speak_sequence(
+        [text],
+        delay=0.10
+    )
+
+
+# ============================================================
+# SELECTION VOICE
+# ============================================================
 
 def selection_voice(
     text,
-    key="general",
-    delay=0.10,
-    intro_text=None
+    value=None,
+    key=None,
+    delay=0.12
 ):
     """
-    For the first real interaction of a field:
-        intro_text -> selected value
-
-    For later changes:
-        selected value only
-
-    The caller decides when this function should be invoked.
+    Selection change-এর Bangla confirmation voice.
     """
-    clean_text = clean_voice_text(text)
 
-    if not clean_text:
+    if not text:
         return
 
-    with _SELECTION_LOCK:
-        previous_text = _LAST_SELECTION_TEXT.get(key)
-
-        if previous_text == clean_text:
-            return
-
-        _LAST_SELECTION_TEXT[key] = clean_text
-
-    sequence = []
-
-    if intro_text:
-        sequence.append(intro_text)
-
-    sequence.append(clean_text)
-
-    _run_voice_sequence(sequence, delay=delay)
+    speak_sequence(
+        [text],
+        delay=delay
+    )
 
 
-def reset_section_voice():
-    global _LAST_SECTION_TEXT
+# ============================================================
+# SECTION VOICE
+# ============================================================
 
-    _new_voice_token()
+def section_voice(
+    text,
+    key=None,
+    delay=0.10
+):
+    """
+    Section heading / instruction voice.
+    """
 
-    with _SECTION_LOCK:
-        _LAST_SECTION_TEXT = {}
+    if not text:
+        return
 
-
-def reset_selection_voice():
-    global _LAST_SELECTION_TEXT
-
-    _new_voice_token()
-
-    with _SELECTION_LOCK:
-        _LAST_SELECTION_TEXT = {}
-
-
-def reset_all_voice_states():
-    global _LAST_SELECTION_TEXT
-    global _LAST_SECTION_TEXT
-
-    _new_voice_token()
-
-    with _SELECTION_LOCK:
-        _LAST_SELECTION_TEXT = {}
-
-    with _SECTION_LOCK:
-        _LAST_SECTION_TEXT = {}
+    speak_sequence(
+        [text],
+        delay=delay
+    )
 
 
-def play_voice(text, delay=0.2):
-    _run_voice_sequence([text], delay=delay)
+# ============================================================
+# PROCESS VOICE QUEUE
+# ============================================================
+
+def process_voice_queue():
+    """
+    Compatibility function.
+
+    বর্তমানে আলাদা queue/thread দরকার নেই।
+    speak_sequence সরাসরি audio তৈরি করে।
+    """
+
+    _init_voice_state()
 
 
-def speak(text):
-    play_voice(text, delay=0.2)
+# ============================================================
+# BROWSER VOICE PLAYER
+# ============================================================
+
+def render_voice_player():
+    """
+    Browser-এর ভিতরে Bangla audio play করবে।
+
+    Streamlit Cloud compatible.
+    Server-side playsound ব্যবহার করা হচ্ছে না।
+    """
+
+    _init_voice_state()
+
+    audio = st.session_state.get(
+        "voice_audio"
+    )
+
+    version = st.session_state.get(
+        "voice_version",
+        0
+    )
+
+    rendered_version = st.session_state.get(
+        "voice_rendered_version",
+        -1
+    )
+
+    if not audio:
+        return
+
+    # একই audio বারবার play করবে না
+    if version == rendered_version:
+        return
+
+    # Mark as rendered
+    st.session_state[
+        "voice_rendered_version"
+    ] = version
+
+    # Browser-side audio
+    st.audio(
+        audio,
+        format="audio/mp3",
+        autoplay=True
+    )
+
+
+# ============================================================
+# CANCEL CURRENT VOICE
+# ============================================================
+
+def cancel_pending_voice():
+    """
+    Current voice reset.
+    """
+
+    _init_voice_state()
+
+    st.session_state["voice_audio"] = None
+    st.session_state["voice_hash"] = None
+
+    st.session_state["voice_version"] = (
+        st.session_state.get("voice_version", 0) + 1
+    )
+
+
+# ============================================================
+# RESET VOICE STATE
+# ============================================================
+
+def reset_voice_state():
+    """
+    Completely reset voice session state.
+    """
+
+    st.session_state["voice_audio"] = None
+    st.session_state["voice_hash"] = None
+    st.session_state["voice_version"] = 0
+    st.session_state["voice_rendered_version"] = -1

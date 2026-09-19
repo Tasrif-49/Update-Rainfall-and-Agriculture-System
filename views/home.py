@@ -52,19 +52,6 @@ def show_home(df):
         <div class='hero-stat'>
 
         <div class='hero-num'>
-        CatBoost
-        </div>
-
-        <div class='hero-label'>
-        Rainfall Model
-        </div>
-
-        </div>
-
-
-        <div class='hero-stat'>
-
-        <div class='hero-num'>
         🌱 Smart
         </div>
 

@@ -52,6 +52,19 @@ def show_home(df):
         <div class='hero-stat'>
 
         <div class='hero-num'>
+        
+        </div>
+
+        <div class='hero-label'>
+        
+        </div>
+
+        </div>
+
+
+        <div class='hero-stat'>
+
+        <div class='hero-num'>
         🌱 Smart
         </div>
 

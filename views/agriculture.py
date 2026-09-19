@@ -3833,14 +3833,28 @@ def show_agriculture():
     # ========================================================
     # PAGE HEADER
     # ========================================================
+
+    st.title(
+        "Smart Agriculture & Irrigation"
+    )
+
+
+    st.caption(
+        "ফসল, মৌসুম, রোপণ/বপনের তারিখ, জমির পরিমাণ, "
+        "মাটির ধরন, বৃষ্টির পূর্বাভাস এবং জমিতে থাকা পানি "
+        "অনুযায়ী সেচের পানি হিসাব করুন।"
+    )
+
+
     st.markdown(
         """
-        <div class="agri-header" style="background:linear-gradient(135deg,#F1FAF5,#FFFFFF);padding:1.8rem 2rem;border-radius:18px;border-left:6px solid #168F87;box-shadow:0 8px 22px rgba(22,143,135,.10);margin-bottom:1rem;">
-            <h1 style="color:#0B1D33;font-size:2.3rem;font-weight:800;margin:0 0 .6rem 0;">
-                🌱 Smart Agriculture <span style="color:#168F87;">&</span> Irrigation Management System
-            </h1>
-            <p style="color:#52616B;font-size:1.05rem;line-height:1.7;margin:0;">
-                ফসলের পানির চাহিদা ও সেচ ব্যবস্থাপনার জন্য একটি সমন্বিত কৃষি সমাধান।
+        <div class='agri-card'>
+            <h3>Smart Irrigation Recommendation</h3>
+            <p>
+            ফসলের মৌসুম, প্রকৃত রোপণ/বপনের তারিখ,
+            বৃদ্ধি পর্যায়, জমির পরিমাণ, বৃষ্টির পূর্বাভাস
+            এবং ET0 ব্যবহার করে প্রয়োজনীয় সেচের পরিমাণ
+            হিসাব করা হবে।
             </p>
         </div>
         """,

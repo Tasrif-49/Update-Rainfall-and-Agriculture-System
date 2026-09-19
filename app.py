@@ -1475,11 +1475,6 @@ if new_theme != st.session_state.theme:
     apply_native_theme(new_theme)
     st.rerun()
 
-st.sidebar.markdown(
-    "<div class='sb-note'>Theme all pages e apply hobe</div>",
-    unsafe_allow_html=True
-)
-
 
 # ============================================================
 # DARK THEME (only custom parts - widgets are native dark)

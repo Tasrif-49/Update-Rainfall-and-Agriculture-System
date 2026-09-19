@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Bangladesh Smart Rainfall & Agriculture System
 
 AI-based rainfall prediction and smart irrigation recommendation system.
@@ -44,3 +45,6 @@ Bangladesh_Smart_Rainfall_Agriculture_System/
 │   └── rainfall_model(4).pkl
 │
 └── assets/
+=======
+# Update-Rainfall-and-Agriculture-System
+>>>>>>> 10bc3444c35977a648b8cf02da71a187c272c982

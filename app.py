@@ -43,7 +43,7 @@ st.set_page_config(
     page_title="Bangladesh Rainfall & Agriculture System",
     page_icon="🌧️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="auto"
 )
 
 
@@ -1378,6 +1378,29 @@ st.markdown(
 
 [data-testid="stSidebar"] [data-testid="stButtonGroup"] button p {
     color: inherit !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    font-size: 0.86rem !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stButtonGroup"] {
+    display: flex !important;
+    gap: 0.4rem !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stButtonGroup"] button {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    padding-left: 0.4rem !important;
+    padding-right: 0.4rem !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stButtonGroup"] button [data-testid="stMarkdownContainer"],
+[data-testid="stSidebar"] [data-testid="stButtonGroup"] button div {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
 }
 
 [data-testid="stSidebar"] [data-testid="stButtonGroup"] button[data-testid="stBaseButton-segmented_controlActive"] {
@@ -1537,19 +1560,62 @@ if st.session_state.theme == "dark":
 }
 .result-card h1, .result-card h2, .result-card h3, .result-card p { color: #6FD39A !important; }
 
-/* radio / checkbox / toggle option text (was dark-on-dark) */
-[data-testid="stMain"] [data-testid="stRadio"] label,
-[data-testid="stMain"] [data-testid="stRadio"] label *,
-[data-testid="stMain"] [data-testid="stRadio"] [data-testid="stMarkdownContainer"] p,
-[data-testid="stMain"] [data-testid="stCheckbox"] label,
-[data-testid="stMain"] [data-testid="stCheckbox"] label *,
-[data-testid="stMain"] [data-testid="stToggle"] label,
-[data-testid="stMain"] [data-testid="stToggle"] label * {
+/* ---------------------------------------------------------
+   DARK MODE TEXT FIX (radio / checkbox / toggle / labels / tabs)
+   :not(#x) adds ID-level specificity, so this wins over any
+   class/attribute based colour rule (including page CSS).
+--------------------------------------------------------- */
+[data-testid="stMain"] [data-testid="stRadio"]:not(#x) label:not(#x),
+[data-testid="stMain"] [data-testid="stRadio"]:not(#x) label:not(#x) *,
+[data-testid="stMain"] [data-testid="stRadio"]:not(#x) p:not(#x),
+[data-testid="stMain"] [data-testid="stRadio"]:not(#x) span:not(#x),
+[data-testid="stMain"] [data-testid="stRadio"]:not(#x) div:not(#x),
+[data-testid="stMain"] [data-testid="stCheckbox"]:not(#x) label:not(#x),
+[data-testid="stMain"] [data-testid="stCheckbox"]:not(#x) label:not(#x) *,
+[data-testid="stMain"] [data-testid="stToggle"]:not(#x) label:not(#x),
+[data-testid="stMain"] [data-testid="stToggle"]:not(#x) label:not(#x) *,
+[data-testid="stMain"] [data-testid="stWidgetLabel"]:not(#x),
+[data-testid="stMain"] [data-testid="stWidgetLabel"]:not(#x) *,
+[data-testid="stMain"] button[role="tab"]:not(#x) p:not(#x),
+[data-testid="stMain"] [data-testid="stCaptionContainer"]:not(#x),
+[data-testid="stMain"] [data-testid="stCaptionContainer"]:not(#x) * {
     color: #E6EDF3 !important;
+    -webkit-text-fill-color: #E6EDF3 !important;
     opacity: 1 !important;
+    filter: none !important;
+}
+
+/* radio dot: keep the teal accent when selected */
+[data-testid="stMain"] [data-testid="stRadio"]:not(#x) label:not(#x):has(input:checked) p:not(#x) {
+    color: #7FE0D2 !important;
+    -webkit-text-fill-color: #7FE0D2 !important;
+    font-weight: 600 !important;
 }
 
 hr { border-color: #263545 !important; }
+
+/* buttons (quick navigation etc.) */
+.stButton > button:not(#x):not([kind="primary"]):not([data-testid="stBaseButton-primary"]) {
+    background: #16212E !important;
+    border: 1.5px solid #2F4A5E !important;
+    color: #E6EDF3 !important;
+}
+.stButton > button:not(#x):not([kind="primary"]):not([data-testid="stBaseButton-primary"]):hover {
+    background: #1F3446 !important;
+    border-color: #55D6C2 !important;
+    color: #7FE0D2 !important;
+}
+.stButton > button[kind="primary"]:not(#x),
+.stButton > button[data-testid="stBaseButton-primary"]:not(#x) {
+    background: linear-gradient(135deg, #168F87, #1F9E92) !important;
+    border: 1.5px solid #55D6C2 !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 14px rgba(22,143,135,0.35) !important;
+}
+.stButton > button[kind="primary"]:not(#x) p,
+.stButton > button[data-testid="stBaseButton-primary"]:not(#x) p {
+    color: #FFFFFF !important;
+}
 
 /* footer */
 .footer { color: #9FB0BF !important; }
@@ -1565,6 +1631,203 @@ hr { border-color: #263545 !important; }
 """,
         unsafe_allow_html=True
     )
+
+
+# ============================================================
+# RADIO OPTION BOXES (all radio buttons in main area)
+# Hover highlight + selected highlight. CSS only, no logic change.
+# ============================================================
+
+if st.session_state.theme == "dark":
+    RB = {
+        "bg": "#16212E",
+        "border": "#33475A",
+        "hover_bg": "#1F3446",
+        "hover_border": "#55D6C2",
+        "sel_bg": "rgba(85,214,194,0.14)",
+        "sel_border": "#55D6C2",
+        "shadow": "rgba(0,0,0,0.35)",
+    }
+else:
+    RB = {
+        "bg": "#FFFFFF",
+        "border": "#D5DEE7",
+        "hover_bg": "#E8F7F5",
+        "hover_border": "#168F87",
+        "sel_bg": "#E8F7F5",
+        "sel_border": "#168F87",
+        "shadow": "rgba(22,143,135,0.18)",
+    }
+
+RADIO_BOX_CSS = """
+<style>
+
+[data-testid="stMain"] [data-testid="stRadio"]:not(#x) div[role="radiogroup"]:not(#x) {
+    gap: 0.55rem !important;
+}
+
+/* each option = a box */
+[data-testid="stMain"] [data-testid="stRadio"]:not(#x) label:not(#x) {
+    background: __BG__ !important;
+    border: 1.5px solid __BORDER__ !important;
+    border-radius: 12px !important;
+    padding: 0.75rem 1rem !important;
+    margin: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    transition: background 0.18s ease, border-color 0.18s ease,
+                box-shadow 0.18s ease, transform 0.18s ease !important;
+}
+
+/* mouse over -> highlight */
+[data-testid="stMain"] [data-testid="stRadio"]:not(#x) label:not(#x):hover {
+    background: __HOVER_BG__ !important;
+    border-color: __HOVER_BORDER__ !important;
+    box-shadow: 0 4px 14px __SHADOW__ !important;
+    transform: translateY(-1px) !important;
+}
+
+/* selected option */
+[data-testid="stMain"] [data-testid="stRadio"]:not(#x) label:not(#x):has(input:checked) {
+    background: __SEL_BG__ !important;
+    border-color: __SEL_BORDER__ !important;
+    box-shadow: 0 0 0 1px __SEL_BORDER__ !important;
+}
+
+/* keyboard focus */
+[data-testid="stMain"] [data-testid="stRadio"]:not(#x) label:not(#x):focus-within {
+    border-color: __HOVER_BORDER__ !important;
+}
+
+</style>
+"""
+
+for _k, _v in {
+    "__BG__": RB["bg"],
+    "__BORDER__": RB["border"],
+    "__HOVER_BG__": RB["hover_bg"],
+    "__HOVER_BORDER__": RB["hover_border"],
+    "__SEL_BG__": RB["sel_bg"],
+    "__SEL_BORDER__": RB["sel_border"],
+    "__SHADOW__": RB["shadow"],
+}.items():
+    RADIO_BOX_CSS = RADIO_BOX_CSS.replace(_k, _v)
+
+st.markdown(RADIO_BOX_CSS, unsafe_allow_html=True)
+
+
+# ============================================================
+# MOBILE / PHONE OPTIMISATION (CSS only, no logic change)
+# Desktop is untouched: everything is inside @media queries.
+# ============================================================
+
+st.markdown(
+    """
+<style>
+
+@media (max-width: 768px) {
+
+    /* stop sideways scrolling */
+    html, body,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"] {
+        overflow-x: hidden !important;
+    }
+
+    .block-container {
+        padding: 1rem 0.9rem 4rem 0.9rem !important;
+    }
+
+    /* headings */
+    [data-testid="stMain"] h1 { font-size: 1.55rem !important; line-height: 1.3 !important; }
+    [data-testid="stMain"] h2 { font-size: 1.3rem !important; }
+    [data-testid="stMain"] h3 { font-size: 1.15rem !important; }
+
+    .section-title {
+        font-size: 1.05rem !important;
+        margin-top: 1.2rem !important;
+        margin-bottom: 0.8rem !important;
+    }
+
+    /* cards */
+    .card, .agri-card, .result-card {
+        padding: 1rem !important;
+        border-radius: 14px !important;
+    }
+
+    /* hero stats: two per row */
+    .hero-stats { gap: 1rem !important; }
+    .hero-stat  { flex: 1 1 40% !important; }
+
+    /* inputs: 16px stops iPhone auto-zoom, bigger touch area */
+    [data-testid="stMain"] input,
+    [data-testid="stMain"] textarea {
+        font-size: 16px !important;
+    }
+
+    [data-testid="stMain"] [data-baseweb="select"] > div {
+        min-height: 46px !important;
+    }
+
+    /* buttons: full width, finger friendly */
+    .stButton > button,
+    [data-testid="stFormSubmitButton"] button {
+        min-height: 48px !important;
+        width: 100% !important;
+    }
+
+    /* radio boxes: bigger touch target */
+    [data-testid="stMain"] [data-testid="stRadio"]:not(#x) label:not(#x) {
+        min-height: 48px !important;
+        padding: 0.8rem 0.9rem !important;
+    }
+
+    /* metrics */
+    div[data-testid="stMetric"] { padding: 0.8rem !important; }
+    [data-testid="stMetricValue"],
+    [data-testid="stMetricValue"] * { font-size: 1.4rem !important; }
+
+    /* bottom quick navigation: 2 x 2 grid */
+    [data-testid="stHorizontalBlock"]:has([class*="st-key-quick_nav_"]) {
+        flex-wrap: wrap !important;
+        gap: 0.6rem !important;
+    }
+    [data-testid="stHorizontalBlock"]:has([class*="st-key-quick_nav_"]) > [data-testid="stColumn"],
+    [data-testid="stHorizontalBlock"]:has([class*="st-key-quick_nav_"]) > [data-testid="column"] {
+        flex: 1 1 calc(50% - 0.6rem) !important;
+        min-width: calc(50% - 0.6rem) !important;
+    }
+
+    /* charts: hide hover toolbar (it covers the chart on touch) */
+    .js-plotly-plot .modebar-container { display: none !important; }
+
+    /* tables scroll inside their own box */
+    [data-testid="stDataFrame"] { max-width: 100% !important; }
+
+    /* sidebar menu: bigger touch rows */
+    [data-testid="stSidebar"] [data-testid="stRadio"] label {
+        padding: 0.85rem 0.9rem !important;
+    }
+
+    .footer { font-size: 0.85rem !important; padding: 1.5rem 0 1rem !important; }
+}
+
+
+@media (max-width: 420px) {
+
+    .hero { padding: 1.2rem !important; }
+    .hero h1 { font-size: 1.3rem !important; }
+    .hero p  { font-size: 0.9rem !important; }
+    .hero-num { font-size: 1.15rem !important; }
+}
+
+</style>
+""",
+    unsafe_allow_html=True
+)
 
 
 # ============================================================
@@ -1661,7 +1924,12 @@ for col, (button_text, target_page) in zip(
     if col.button(
         button_text,
         width="stretch",
-        key=f"quick_nav_{target_page}"
+        key=f"quick_nav_{target_page}",
+        type=(
+            "primary"
+            if st.session_state.page == target_page
+            else "secondary"
+        )
     ):
 
         st.session_state.page = target_page

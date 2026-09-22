@@ -88,7 +88,7 @@ def start_agriculture_welcome():
     """
     Agriculture page open হলে:
     1. প্রথমে Welcome voice
-    2. Welcome শেষ হলে "বৃষ্টির তথ্যের উৎস নির্বাচন করুন"
+    2. Welcome শেষ হলে "আপনার এলাকা বা লোকেশন নির্বাচন করুন"
 
     অন্য কোনো input-এর voice page load-এর সময় বাজবে না।
     """
@@ -110,7 +110,7 @@ def start_agriculture_welcome():
     speak_sequence(
         [
             AGRICULTURE_WELCOME_TEXT,
-            "বৃষ্টির তথ্যের উৎস নির্বাচন করুন"
+            "আপনার এলাকা বা লোকেশন নির্বাচন করুন"
         ],
         delay=0.10
     )
@@ -837,7 +837,7 @@ VOICE_NEXT_INSTRUCTION = {
 
     # Weather source select করার পর সরাসরি Land Area নয়।
     # Manual rainfall হলে আগে rainfall -> ET0 complete হবে.
-    "agriculture_weather_source": "",
+   
 
     # Manual rainfall input-এর পরে ET0
     "agriculture_manual_rain":
@@ -1072,6 +1072,15 @@ def input_voice_callback(
 # ============================================================
 # AGRICULTURE AUTO RAINFALL PREDICTION
 # ============================================================
+#
+# IMPORTANT (FIX):
+# আগে station selectbox-এ index=None ছিল না, ফলে page load হওয়া
+# মাত্র প্রথম label auto-select হয়ে যেত এবং সাথে সাথেই rainfall
+# prediction/calculation শুরু হয়ে যেত।
+#
+# এখন index=None + placeholder ব্যবহার করা হয়েছে, তাই user নিজে
+# location select না করা পর্যন্ত কোনো prediction চলবে না।
+# ============================================================
 
 def auto_predict_agriculture_rainfall(
     df,
@@ -1081,7 +1090,9 @@ def auto_predict_agriculture_rainfall(
     history_days
 ):
     """
-    Automatically predict rainfall for the selected Agriculture station.
+    User তার Location / Station নির্বাচন করার পরই automatic rainfall
+    prediction চলবে। Page load হওয়া মাত্র কিছু auto-select/calculate
+    হবে না।
 
     The prediction engine is the same one used by views.prediction, so
     Agriculture and Rain Prediction use identical feature preparation and
@@ -1109,8 +1120,25 @@ def auto_predict_agriculture_rainfall(
     selected_label = st.selectbox(
         "📍 Location / Station নির্বাচন করুন",
         labels,
+        index=None,
+        placeholder="আপনার Location / Station নির্বাচন করুন",
         key="agriculture_station"
     )
+
+    # --------------------------------------------------------
+    # এখনো কোনো location select করা হয়নি
+    # -> এখানেই থেমে যাবে, কিছুই calculate হবে না।
+    # --------------------------------------------------------
+
+    if selected_label is None:
+
+        st.info(
+            "উপরে আপনার Location / Station নির্বাচন করুন। "
+            "নির্বাচন করার সাথে সাথে আজকের বৃষ্টির পূর্বাভাস "
+            "স্বয়ংক্রিয়ভাবে হিসাব করা হবে।"
+        )
+
+        return None
 
     station = meta.loc[
         meta["label"] == selected_label
@@ -1306,12 +1334,52 @@ def auto_predict_agriculture_rainfall(
 # ============================================================
 # WEATHER SECTION
 # ============================================================
-
 def weather_information_section():
 
     section_title(
         "আবহাওয়া ও বৃষ্টির তথ্য",
         "Weather & Rainfall Information"
+    )
+
+    predicted_rain = 0.0
+    et0_value = 0.0
+
+    if "rain_prediction" in st.session_state:
+
+        rain_data = st.session_state.rain_prediction
+
+        predicted_rain = float(
+            rain_data.get("prediction", 0.0)
+        )
+
+        et0_value = float(
+            rain_data.get("et0", 4.0)
+        )
+
+        with st.container(border=True):
+
+            st.success(
+                f"""
+                বৃষ্টির পূর্বাভাস:
+                {bn_num(predicted_rain,2)} mm
+
+                ET0:
+                {bn_num(et0_value,2)} mm/day
+                """
+            )
+
+    else:
+
+        st.info(
+            "প্রথমে Location নির্বাচন করুন। "
+            "Location থেকে স্বয়ংক্রিয়ভাবে বৃষ্টির তথ্য নেওয়া হবে।"
+        )
+
+
+    return (
+        "Automatic Rain Prediction",
+        predicted_rain,
+        et0_value
     )
 
 
@@ -1323,21 +1391,7 @@ def weather_information_section():
 
         prepare_voice_input("agriculture_weather_source")
 
-        weather_source = st.radio(
-            "বৃষ্টির তথ্যের উৎস (Rainfall Source)",
-            [
-                "বৃষ্টির পূর্বাভাস ব্যবহার করুন (Use Rain Prediction)",
-                "নিজে বৃষ্টির পরিমাণ দিন (Manual Rainfall Input)"
-            ],
-            index=None,
-            key="agriculture_weather_source",
-            on_change=input_voice_callback,
-            args=(
-                "agriculture_weather_source",
-                "বৃষ্টির তথ্যের উৎস নির্বাচন করুন",
-                None
-            )
-        )
+
 
         _voice_input_field(
             "agriculture_weather_source",
@@ -4310,6 +4364,17 @@ def show_agriculture_result():
 # ============================================================
 # MAIN AGRICULTURE PAGE
 # ============================================================
+#
+# FIXED FLOW:
+# 1. Title / header সবার আগে দেখাবে।
+# 2. Welcome voice চলবে।
+# 3. তারপর Location / Station select box দেখানো হবে।
+# 4. যতক্ষণ user নিজে location select না করে ততক্ষণ কোনো
+#    prediction/calculation শুরু হবে না।
+# 5. Location select করার পরই automatic rainfall prediction চলবে
+#    এবং তারপর normal input panel (weather source, land ইত্যাদি)
+#    দেখানো শুরু হবে।
+# ============================================================
 
 def show_agriculture(
     df,
@@ -4328,50 +4393,7 @@ def show_agriculture(
 
 
     # ========================================================
-    # WELCOME
-    # ========================================================
-
-    start_agriculture_welcome()
-
-
-    # ========================================================
-    # AUTOMATIC RAINFALL PREDICTION
-    # ========================================================
-    # Station select করলেই আজকের rainfall prediction তৈরি হবে।
-    # Existing Agriculture calculations এরপর একই
-    # st.session_state.rain_prediction ব্যবহার করবে।
-
-    selected_agriculture_station = auto_predict_agriculture_rainfall(
-        df=df,
-        model=model,
-        feature_columns=feature_columns,
-        train_medians=train_medians,
-        history_days=history_days
-    )
-
-    if selected_agriculture_station is not None:
-        rain_data = st.session_state.get(
-            "rain_prediction",
-            {}
-        )
-
-        if rain_data:
-            st.caption(
-                f"🌧️ Automatic rainfall prediction: "
-                f"{float(rain_data.get('prediction', 0.0)):.2f} mm "
-                f"| ET0: {float(rain_data.get('et0', 0.0)):.2f} mm/day"
-            )
-
-            # The existing weather source radio is kept unchanged,
-            # but automatic prediction is selected by default.
-            if "agriculture_weather_source" not in st.session_state:
-                st.session_state.agriculture_weather_source = (
-                    "বৃষ্টির পূর্বাভাস ব্যবহার করুন (Use Rain Prediction)"
-                )
-
-
-    # ========================================================
-    # PAGE HEADER
+    # PAGE HEADER — সবার আগে
     # ========================================================
 
     st.title(
@@ -4403,8 +4425,54 @@ def show_agriculture(
 
 
     # ========================================================
+    # WELCOME VOICE
+    # ========================================================
+
+    start_agriculture_welcome()
+
+
+    # ========================================================
+    # LOCATION SELECT -> AUTOMATIC RAINFALL PREDICTION
+    # ========================================================
+    # User location select না করা পর্যন্ত এই ফাংশন None রিটার্ন
+    # করবে এবং কোনো prediction/API call চলবে না।
+
+    selected_agriculture_station = auto_predict_agriculture_rainfall(
+        df=df,
+        model=model,
+        feature_columns=feature_columns,
+        train_medians=train_medians,
+        history_days=history_days
+    )
+
+    if selected_agriculture_station is not None:
+        rain_data = st.session_state.get(
+            "rain_prediction",
+            {}
+        )
+
+        if rain_data:
+            st.caption(
+                f"🌧️ Automatic rainfall prediction: "
+                f"{float(rain_data.get('prediction', 0.0)):.2f} mm "
+                f"| ET0: {float(rain_data.get('et0', 0.0)):.2f} mm/day"
+            )
+
+            # The existing weather source radio is kept unchanged,
+            # but automatic prediction is selected by default.
+            if "agriculture_weather_source" not in st.session_state:
+                st.session_state.agriculture_weather_source = (
+                    "বৃষ্টির পূর্বাভাস ব্যবহার করুন (Use Rain Prediction)"
+                )
+
+
+    # ========================================================
     # INPUT PANEL
     # ========================================================
+    # Location select না হলে auto_predict_agriculture_rainfall()
+    # ইতিমধ্যে info দেখিয়ে থেমে গেছে, এখানে _agriculture_input_panel()
+    # চললেও weather_information_section() নিজে থেকেই None রিটার্ন
+    # করবে যতক্ষণ agriculture_weather_source সেট না হয়।
 
     _agriculture_input_panel()
 

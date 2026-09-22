@@ -23,9 +23,7 @@ from services.data_loader import (
 )
 
 
-# ============================================================
 # IMPORT VIEWS
-# ============================================================
 
 from views.home import show_home
 from views.prediction import show_prediction
@@ -35,9 +33,7 @@ from views.analytics import show_analytics
 from views.about import show_about
 
 
-# ============================================================
 # PAGE CONFIG
-# ============================================================
 
 st.set_page_config(
     page_title="Bangladesh Rainfall & Agriculture System",
@@ -47,9 +43,7 @@ st.set_page_config(
 )
 
 
-# ============================================================
 # PLOTLY THEME
-# ============================================================
 
 pio.templates["monsoon"] = pio.templates["plotly_white"]
 
@@ -83,9 +77,7 @@ pio.templates["monsoon"].layout.yaxis.gridcolor = LINE
 pio.templates.default = "monsoon"
 
 
-# ============================================================
 # THEME STATE (persists across all pages)
-# ============================================================
 
 THEME_LABELS = {
     "light": "☀️ Light",
@@ -97,12 +89,10 @@ if "theme" not in st.session_state:
     st.session_state.theme = "dark" if saved_theme == "dark" else "light"
 
 
-# ============================================================
 # NATIVE STREAMLIT THEME
 # Streamlit's own widgets (inputs, selects, date picker, buttons,
 # metrics, tables, expanders...) switch to dark natively.
 # Light mode = original Streamlit default (nothing changes).
-# ============================================================
 
 DARK_NATIVE = {
     "theme.base": "dark",
@@ -137,11 +127,9 @@ if apply_native_theme(st.session_state.theme):
     st.rerun()
 
 
-# ============================================================
 # CSS - PROFESSIONAL UI
 # (unchanged. Streamlit-widget styling is applied in Light mode
 #  only; in Dark mode Streamlit's native dark theme handles it)
-# ============================================================
 
 CSS_TOP = """
 <style>
@@ -1426,10 +1414,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-
-# ============================================================
 # SIDEBAR - BRAND
-# ============================================================
 
 st.sidebar.markdown(
     """
@@ -1446,10 +1431,7 @@ st.sidebar.markdown(
 
 st.sidebar.divider()
 
-
-# ============================================================
 # NAVIGATION
-# ============================================================
 
 st.sidebar.markdown(
     "<div class='sb-section'>Menu</div>",
@@ -1467,10 +1449,7 @@ selected_page = st.sidebar.radio(
     label_visibility="collapsed"
 )
 
-
-# ============================================================
 # THEME SWITCH
-# ============================================================
 
 st.sidebar.divider()
 
@@ -1499,9 +1478,7 @@ if new_theme != st.session_state.theme:
     st.rerun()
 
 
-# ============================================================
 # DARK THEME (only custom parts - widgets are native dark)
-# ============================================================
 
 if st.session_state.theme == "dark":
 
@@ -1633,10 +1610,9 @@ hr { border-color: #263545 !important; }
     )
 
 
-# ============================================================
+
 # RADIO OPTION BOXES (all radio buttons in main area)
 # Hover highlight + selected highlight. CSS only, no logic change.
-# ============================================================
 
 if st.session_state.theme == "dark":
     RB = {
@@ -1719,10 +1695,8 @@ for _k, _v in {
 st.markdown(RADIO_BOX_CSS, unsafe_allow_html=True)
 
 
-# ============================================================
 # MOBILE / PHONE OPTIMISATION (CSS only, no logic change)
 # Desktop is untouched: everything is inside @media queries.
-# ============================================================
 
 st.markdown(
     """
@@ -1830,9 +1804,7 @@ st.markdown(
 )
 
 
-# ============================================================
 # UPDATE PAGE
-# ============================================================
 
 if selected_page != st.session_state.page:
 
@@ -1840,10 +1812,7 @@ if selected_page != st.session_state.page:
 
     st.rerun()
 
-
-# ============================================================
 # ROUTING
-# ============================================================
 
 page = st.session_state.page
 
@@ -1883,9 +1852,7 @@ elif page == "ℹ️ About":
     show_about()
 
 
-# ============================================================
 # QUICK NAVIGATION
-# ============================================================
 
 st.divider()
 
@@ -1936,10 +1903,7 @@ for col, (button_text, target_page) in zip(
 
         st.rerun()
 
-
-# ============================================================
 # FOOTER
-# ============================================================
 
 st.markdown(
     """

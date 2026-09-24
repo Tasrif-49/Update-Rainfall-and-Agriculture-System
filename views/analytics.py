@@ -1,8 +1,4 @@
-
-# ============================================================
 # ADVANCED ANALYTICS PAGE — DEVELOPER GUIDE
-# ============================================================
-#
 # MAIN FUNCTION:
 #     show_analytics(df)
 #
@@ -19,11 +15,9 @@
 #     5. Wind speed vs rainfall
 #     6. Rainfall distribution
 #     7. Station-wise average rainfall
-#
-# ============================================================
+
 #
 # MAIN DATA FLOW
-# ============================================================
 #
 #     Full Dataset (df)
 #             ↓
@@ -45,10 +39,8 @@
 #             ↓
 #     Top 20 Stations
 #
-# ============================================================
 #
 # CODE INDEX
-# ============================================================
 #
 # [01] Imports
 #
@@ -87,12 +79,11 @@
 #      [13-B] Sort stations
 #      [13-C] Keep top 20
 #      [13-D] Display station chart
-#
-# ============================================================
-#
+
+
 # QUICK CHANGE GUIDE
-# ============================================================
-#
+
+
 # Change page title
 #     → [03]
 #
@@ -124,13 +115,10 @@
 #     → [13-C]
 #        Current: top 20
 #
-# ============================================================
 
 
-# ============================================================
+
 # [01] IMPORTS
-# ============================================================
-#
 # streamlit:
 #     Creates the Streamlit interface and displays charts.
 #
@@ -140,16 +128,16 @@
 # plotly.express:
 #     Creates interactive analytics charts.
 #
-# ============================================================
+
 
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 
 
-# ============================================================
+
 # [02] MAIN FUNCTION
-# ============================================================
+
 #
 # show_analytics(df)
 #
@@ -173,29 +161,26 @@ import plotly.express as px
 #
 #     Most charts use x.
 #     Station Average chart uses the complete df.
-#
-# ============================================================
 
 def show_analytics(df):
 
 
-    # ========================================================
+
     # [03] PAGE TITLE
-    # ========================================================
+
     #
     # Main heading of the Analytics page.
-    #
-    # ========================================================
+
 
     st.title(
         "📊 Advanced Analytics"
     )
 
 
-    # ========================================================
+
     # [04] STATION SELECTION
-    # ========================================================
-    #
+
+    
     # Allows the user to analyse:
     #
     #     All stations
@@ -203,37 +188,34 @@ def show_analytics(df):
     # OR
     #
     #     One specific station
-    #
-    # ========================================================
 
 
-    # --------------------------------------------------------
+
+    
     # [04-A] CREATE STATION LIST
-    # --------------------------------------------------------
-    #
+  
+    
     # Converts Station values to strings and sorts them.
     #
     # astype(str):
     #     Keeps dropdown values consistent even if the original
     #     Station column contains mixed data types.
-    #
-    # --------------------------------------------------------
+
 
     stations = sorted(
         df.Station.astype(str).unique()
     )
 
 
-    # --------------------------------------------------------
+  
     # [04-B] STATION SELECTBOX
-    # --------------------------------------------------------
-    #
+   
+    
     # "All" is added as the first option.
-    #
+    
     # No key is specified here, so Streamlit uses its normal
     # widget identity.
-    #
-    # --------------------------------------------------------
+
 
     sel = st.selectbox(
         "Station for detailed analytics",
@@ -241,32 +223,28 @@ def show_analytics(df):
     )
 
 
-    # --------------------------------------------------------
     # [04-C] ALL STATIONS
-    # --------------------------------------------------------
+
     #
     # If "All" is selected:
     #
     #     x = complete dataset
     #
-    # --------------------------------------------------------
+
 
     if sel == "All":
 
         x = df.copy()
 
 
-    # --------------------------------------------------------
     # [04-D] SPECIFIC STATION
-    # --------------------------------------------------------
+
     #
     # If a station is selected:
     #
     #     Only that station's records are copied into x.
     #
     # x is the dataset used by the detailed analytics charts.
-    #
-    # --------------------------------------------------------
 
     else:
 
@@ -277,9 +255,9 @@ def show_analytics(df):
         ].copy()
 
 
-    # ========================================================
+    
     # [05] EMPTY DATASET CHECK
-    # ========================================================
+  
     #
     # Safety check.
     #
@@ -288,8 +266,7 @@ def show_analytics(df):
     #
     # This prevents charts from being generated from an empty
     # dataframe.
-    #
-    # ========================================================
+
 
     if x.empty:
 
@@ -300,9 +277,9 @@ def show_analytics(df):
         return
 
 
-    # ========================================================
+ 
     # [06] MONTHLY AVERAGE RAINFALL
-    # ========================================================
+  
     #
     # PURPOSE:
     #     Calculate the average rainfall for each month.
@@ -316,13 +293,11 @@ def show_analytics(df):
     #
     # This analysis uses the currently selected station dataset
     # "x".
-    #
-    # ========================================================
 
 
-    # --------------------------------------------------------
+
+
     # [06-A] EXTRACT MONTH NUMBER
-    # --------------------------------------------------------
     #
     # Date.dt.month converts:
     #
@@ -330,8 +305,6 @@ def show_analytics(df):
     #     2025-06-20 → 6
     #
     # The month number is temporarily stored as "Month".
-    #
-    # --------------------------------------------------------
 
     monthly = (
         x
@@ -340,16 +313,12 @@ def show_analytics(df):
         )
 
 
-        # ----------------------------------------------------
         # [06-B] CALCULATE MONTHLY AVERAGE
-        # ----------------------------------------------------
-        #
         # Group records by month and calculate the mean
         # rainfall.
         #
         # rain_sum = daily rainfall value.
-        #
-        # ----------------------------------------------------
+
 
         .groupby(
             "Month",
@@ -367,17 +336,15 @@ def show_analytics(df):
     )
 
 
-    # --------------------------------------------------------
+    
     # [06-C] CONVERT MONTH NUMBER TO MONTH NAME
-    # --------------------------------------------------------
-    #
+  
+    
     # Example:
     #
     #     1  → Jan
     #     2  → Feb
     #     12 → Dec
-    #
-    # --------------------------------------------------------
 
     monthly["Month Name"] = (
         pd.to_datetime(
@@ -388,17 +355,16 @@ def show_analytics(df):
     )
 
 
-    # --------------------------------------------------------
+  
     # [06-D] MONTHLY RAINFALL BAR CHART
-    # --------------------------------------------------------
-    #
+ 
+    
     # X-axis:
     #     Month Name
     #
     # Y-axis:
     #     Average Rainfall
-    #
-    # --------------------------------------------------------
+
 
     fig = px.bar(
         monthly,
@@ -408,9 +374,8 @@ def show_analytics(df):
     )
 
 
-    # ========================================================
+  
     # [07] MONTHLY CHART CONFIGURATION
-    # ========================================================
     #
     # height:
     #     Chart height.
@@ -425,7 +390,7 @@ def show_analytics(df):
     #     Helps preserve chart UI state during Streamlit
     #     reruns.
     #
-    # ========================================================
+
 
     fig.update_layout(
         height=400,
@@ -435,9 +400,9 @@ def show_analytics(df):
     )
 
 
-    # --------------------------------------------------------
+ 
     # DISPLAY MONTHLY CHART
-    # --------------------------------------------------------
+
 
     st.plotly_chart(
         fig,
@@ -459,10 +424,10 @@ def show_analytics(df):
     )
 
 
-    # ========================================================
+  
     # [08] SAMPLE DATASET
-    # ========================================================
-    #
+
+    
     # Scatter plots can become slow when thousands of points
     # are rendered.
     #
@@ -477,8 +442,7 @@ def show_analytics(df):
     # IMPORTANT:
     #     This sampling is only used for scatter plots.
     #     It does NOT modify x or the original dataset.
-    #
-    # ========================================================
+
 
     sample = x.sample(
         min(
@@ -489,9 +453,8 @@ def show_analytics(df):
     )
 
 
-    # ========================================================
     # [09] HISTORICAL RAINFALL TREND
-    # ========================================================
+  
     #
     # Shows rainfall values over time.
     #
@@ -500,8 +463,7 @@ def show_analytics(df):
     # WHY:
     #     Limiting the number of points keeps the chart easier
     #     to render and view.
-    #
-    # ========================================================
+
 
     a, b = st.columns(2)
 
@@ -518,9 +480,9 @@ def show_analytics(df):
         )
 
 
-        # ----------------------------------------------------
+        
         # CHART CONFIGURATION
-        # ----------------------------------------------------
+   
 
         fig.update_layout(
             height=400,
@@ -530,9 +492,9 @@ def show_analytics(df):
         )
 
 
-        # ----------------------------------------------------
+     
         # DISPLAY HISTORICAL TREND
-        # ----------------------------------------------------
+     
 
         st.plotly_chart(
             fig,
@@ -554,10 +516,7 @@ def show_analytics(df):
         )
 
 
-    # ========================================================
     # [10] TEMPERATURE VS RAINFALL
-    # ========================================================
-    #
     # Scatter plot showing the relationship between:
     #
     #     X-axis → Mean temperature
@@ -568,8 +527,7 @@ def show_analytics(df):
     # IMPORTANT:
     #     This chart shows association visually.
     #     It does not by itself prove causation.
-    #
-    # ========================================================
+
 
     with b:
 
@@ -581,9 +539,9 @@ def show_analytics(df):
         )
 
 
-        # ----------------------------------------------------
+       
         # CHART CONFIGURATION
-        # ----------------------------------------------------
+    
 
         fig.update_layout(
             height=400,
@@ -593,9 +551,8 @@ def show_analytics(df):
         )
 
 
-        # ----------------------------------------------------
+   
         # DISPLAY TEMPERATURE CHART
-        # ----------------------------------------------------
 
         st.plotly_chart(
             fig,
@@ -617,10 +574,10 @@ def show_analytics(df):
         )
 
 
-    # ========================================================
+    
     # [11] WIND SPEED VS RAINFALL
-    # ========================================================
-    #
+  
+    
     # Second relationship analysis.
     #
     # X-axis:
@@ -630,8 +587,7 @@ def show_analytics(df):
     #     Rainfall.
     #
     # Uses the same 3000-record sample created in [08].
-    #
-    # ========================================================
+ 
 
     a, b = st.columns(2)
 
@@ -646,9 +602,9 @@ def show_analytics(df):
         )
 
 
-        # ----------------------------------------------------
+       
         # CHART CONFIGURATION
-        # ----------------------------------------------------
+     
 
         fig.update_layout(
             height=400,
@@ -658,9 +614,9 @@ def show_analytics(df):
         )
 
 
-        # ----------------------------------------------------
+        
         # DISPLAY WIND CHART
-        # ----------------------------------------------------
+      
 
         st.plotly_chart(
             fig,
@@ -682,10 +638,10 @@ def show_analytics(df):
         )
 
 
-    # ========================================================
+  
     # [12] RAINFALL DISTRIBUTION
-    # ========================================================
-    #
+
+    
     # Displays how rainfall values are distributed.
     #
     # Unlike the scatter plots, this chart uses the complete
@@ -693,8 +649,7 @@ def show_analytics(df):
     #
     # nbins=50:
     #     Divides rainfall values into 50 histogram bins.
-    #
-    # ========================================================
+    
 
     with b:
 
@@ -706,9 +661,8 @@ def show_analytics(df):
         )
 
 
-        # ----------------------------------------------------
         # CHART CONFIGURATION
-        # ----------------------------------------------------
+      
 
         fig.update_layout(
             height=400,
@@ -718,9 +672,9 @@ def show_analytics(df):
         )
 
 
-        # ----------------------------------------------------
+        
         # DISPLAY HISTOGRAM
-        # ----------------------------------------------------
+     
 
         st.plotly_chart(
             fig,
@@ -742,10 +696,9 @@ def show_analytics(df):
         )
 
 
-    # ========================================================
     # [13] STATION AVERAGE RAINFALL
-    # ========================================================
-    #
+  
+    
     # PURPOSE:
     #     Compare average rainfall across stations.
     #
@@ -758,18 +711,15 @@ def show_analytics(df):
     # Therefore, even if the user selects one station above,
     # this chart still calculates station averages across the
     # complete dataset.
-    #
-    # ========================================================
+    
 
 
-    # --------------------------------------------------------
     # [13-A] CALCULATE STATION AVERAGE
-    # --------------------------------------------------------
-    #
+
+    
     # Groups the complete dataset by Station and calculates
     # mean rainfall for each station.
-    #
-    # --------------------------------------------------------
+
 
     station_avg = (
         df
@@ -781,13 +731,12 @@ def show_analytics(df):
         .mean()
 
 
-        # ----------------------------------------------------
+       
         # [13-B] SORT BY AVERAGE RAINFALL
-        # ----------------------------------------------------
-        #
+   
+        
         # Highest average rainfall appears first.
-        #
-        # ----------------------------------------------------
+    
 
         .sort_values(
             "rain_sum",
@@ -795,21 +744,18 @@ def show_analytics(df):
         )
 
 
-        # ----------------------------------------------------
         # [13-C] KEEP TOP 20 STATIONS
-        # ----------------------------------------------------
-        #
+   
+        
         # Only the first 20 stations are displayed.
-        #
-        # ----------------------------------------------------
+
 
         .head(20)
     )
 
 
-    # --------------------------------------------------------
+ 
     # [13-D] CREATE STATION BAR CHART
-    # --------------------------------------------------------
 
     fig = px.bar(
         station_avg,
@@ -819,9 +765,9 @@ def show_analytics(df):
     )
 
 
-    # --------------------------------------------------------
+ 
     # STATION CHART CONFIGURATION
-    # --------------------------------------------------------
+
 
     fig.update_layout(
         height=400,
@@ -831,9 +777,9 @@ def show_analytics(df):
     )
 
 
-    # --------------------------------------------------------
+   
     # DISPLAY STATION CHART
-    # --------------------------------------------------------
+ 
 
     st.plotly_chart(
         fig,

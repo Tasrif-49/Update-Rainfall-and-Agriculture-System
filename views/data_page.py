@@ -1,8 +1,6 @@
-
-# ============================================================
 # HISTORICAL WEATHER DATA PAGE — DEVELOPER GUIDE
-# ============================================================
-#
+
+
 # MAIN FUNCTION:
 #     show_data_page(df)
 #
@@ -27,11 +25,7 @@
 #          ↓
 #     Display Filtered Dataset
 #
-# ============================================================
-#
 # CODE INDEX
-# ============================================================
-#
 # [01] Imports
 #
 # [02] Main Function
@@ -66,12 +60,11 @@
 # [10] Display Filtered Data
 #      [10-A] Record count
 #      [10-B] Data table
-#
-# ============================================================
-#
+
+
 # QUICK CHANGE GUIDE
-# ============================================================
-#
+
+
 # Change page title
 #     → Section [02]
 #
@@ -95,33 +88,29 @@
 #
 # Change "Showing X records"
 #     → Section [10-A]
-#
-# ============================================================
 
 
-# ============================================================
+
 # [01] IMPORTS
-# ============================================================
-#
+
+
 # streamlit:
 #     Used for the complete Streamlit user interface.
 #
 # pandas:
 #     Used for date conversion, filtering and dataframe
 #     manipulation.
-#
-# ============================================================
+
 
 import streamlit as st
 import pandas as pd
 
 
-# ============================================================
 # [02] MAIN FUNCTION
-# ============================================================
-#
+
+
 # show_data_page(df)
-#
+
 # INPUT:
 #     df = Main weather dataset loaded by the application.
 #
@@ -134,28 +123,26 @@ import pandas as pd
 #
 # The function does not permanently modify the original
 # dataframe because a copy is created in Section [03].
-#
-# ============================================================
+
 
 def show_data_page(df):
 
-    # --------------------------------------------------------
+  
     # PAGE TITLE
-    # --------------------------------------------------------
-    #
+  
+    
     # To change the page heading, edit the text below.
-    #
-    # --------------------------------------------------------
+
 
     st.title(
         "📂 Historical Weather Dataset"
     )
 
 
-    # ========================================================
+
     # [03] ENSURE DATE FORMAT
-    # ========================================================
-    #
+
+    
     # PURPOSE:
     #     Make sure the Date column is consistently stored as
     #     pandas datetime values before performing date
@@ -164,26 +151,23 @@ def show_data_page(df):
     # WHY THIS IS IMPORTANT:
     #     Date filtering can produce incorrect results if some
     #     values are strings while others are datetime objects.
-    #
-    # ========================================================
 
 
-    # --------------------------------------------------------
+
+ 
     # [03-A] COPY DATAFRAME
-    # --------------------------------------------------------
-    #
+   
     # Creates a separate copy so that date conversion and
     # filtering do not directly modify the original dataframe.
-    #
-    # --------------------------------------------------------
+    
 
     df = df.copy()
 
 
-    # --------------------------------------------------------
+  
     # [03-B] CONVERT DATE COLUMN
-    # --------------------------------------------------------
-    #
+
+    
     # pd.to_datetime():
     #     Converts the Date column into datetime format.
     #
@@ -201,8 +185,7 @@ def show_data_page(df):
     # becomes:
     #
     #     2025-01-15 00:00:00
-    #
-    # --------------------------------------------------------
+    
 
     df["Date"] = pd.to_datetime(
         df["Date"],
@@ -210,26 +193,26 @@ def show_data_page(df):
     ).dt.normalize()
 
 
-    # --------------------------------------------------------
+
     # [03-C] REMOVE INVALID DATES
-    # --------------------------------------------------------
-    #
+ 
+    
     # Any row where Date could not be converted becomes NaT.
-    #
+    
     # Those rows are removed because the page depends on
     # valid dates for summary and filtering.
-    #
-    # --------------------------------------------------------
+    
+
 
     df = df.dropna(
         subset=["Date"]
     ).copy()
 
 
-    # ========================================================
+
     # [04] DATASET SUMMARY
-    # ========================================================
-    #
+
+    
     # Displays three summary metrics:
     #
     #     1. Total records
@@ -237,39 +220,38 @@ def show_data_page(df):
     #     3. Dataset date period
     #
     # These values are calculated from the cleaned dataframe.
-    #
-    # ========================================================
+    
 
 
-    # --------------------------------------------------------
+
+ 
     # [04-A] FIND MINIMUM DATE
-    # --------------------------------------------------------
+
 
     min_date = df["Date"].min().date()
 
 
-    # --------------------------------------------------------
+
     # [04-B] FIND MAXIMUM DATE
-    # --------------------------------------------------------
+  
 
     max_date = df["Date"].max().date()
 
 
-    # --------------------------------------------------------
+
     # [04-C] CREATE THREE SUMMARY COLUMNS
-    # --------------------------------------------------------
+
 
     c1, c2, c3 = st.columns(3)
 
 
-    # --------------------------------------------------------
+
     # [04-D] RECORD COUNT
-    # --------------------------------------------------------
-    #
+
+    
     # Shows the total number of valid weather records currently
     # available in the dataset before filters are applied.
-    #
-    # --------------------------------------------------------
+    
 
     c1.metric(
         "Records",
@@ -277,16 +259,15 @@ def show_data_page(df):
     )
 
 
-    # --------------------------------------------------------
+
     # [04-E] STATION COUNT
-    # --------------------------------------------------------
-    #
+
+    
     # Counts the number of unique Station_ID values.
-    #
+    
     # IMPORTANT:
     #     This is based on Station_ID, not Station name.
-    #
-    # --------------------------------------------------------
+
 
     c2.metric(
         "Stations",
@@ -294,12 +275,12 @@ def show_data_page(df):
     )
 
 
-    # --------------------------------------------------------
+   
     # [04-F] DATASET PERIOD
-    # --------------------------------------------------------
-    #
+    
+    
     # Displays the earliest and latest available dates.
-    #
+    
     # Date format:
     #
     #     DD/MM/YYYY
@@ -307,8 +288,7 @@ def show_data_page(df):
     # Example:
     #
     #     01/01/2016 → 31/12/2025
-    #
-    # --------------------------------------------------------
+
 
     c3.metric(
         "Period",
@@ -317,28 +297,26 @@ def show_data_page(df):
     )
 
 
-    # ========================================================
     # [05] FILTER CONTROLS
-    # ========================================================
-    #
+
+    
     # Users can filter the historical dataset using:
-    #
+    
     #     Station
     #     Division
     #
     # Date filtering is handled separately in Section [06].
-    #
-    # ========================================================
+
 
     s1, s2, s3 = st.columns(3)
 
 
-    # --------------------------------------------------------
+
     # [05-A] STATION FILTER
-    # --------------------------------------------------------
-    #
+  
+    
     # "All" means no station filtering.
-    #
+    
     # Otherwise, only records belonging to the selected
     # station are displayed.
     #
@@ -348,8 +326,7 @@ def show_data_page(df):
     #
     # key:
     #     Used by Streamlit to maintain this widget's state.
-    #
-    # --------------------------------------------------------
+ 
 
     station = s1.selectbox(
         "Station",
@@ -363,16 +340,14 @@ def show_data_page(df):
     )
 
 
-    # --------------------------------------------------------
     # [05-B] DIVISION FILTER
-    # --------------------------------------------------------
-    #
+ 
+    
     # "All" means no division filtering.
     #
     # Otherwise, only records belonging to the selected
     # division are displayed.
-    #
-    # --------------------------------------------------------
+
 
     division = s2.selectbox(
         "Division",
@@ -386,10 +361,9 @@ def show_data_page(df):
     )
 
 
-    # ========================================================
     # [06] DATE RANGE
-    # ========================================================
-    #
+    
+    
     # Allows the user to select:
     #
     #     Start Date → End Date
@@ -399,8 +373,7 @@ def show_data_page(df):
     #
     # format="DD/MM/YYYY":
     #     Controls how dates appear in the Streamlit UI.
-    #
-    # ========================================================
+
 
     dates = s3.date_input(
         "📅 Date Range",
@@ -413,32 +386,30 @@ def show_data_page(df):
     )
 
 
-    # ========================================================
+ 
     # [07] CREATE FILTERED DATAFRAME
-    # ========================================================
-    #
+
+    
     # A separate dataframe "x" is created.
     #
     # The original cleaned dataframe "df" remains unchanged.
     #
     # All filters are progressively applied to x.
-    #
-    # ========================================================
+
 
     x = df.copy()
 
 
-    # ========================================================
+  
     # [08] APPLY STATION FILTER
-    # ========================================================
-    #
+
+    
     # If the user selects "All":
     #     No filtering happens.
     #
     # If a specific station is selected:
     #     Only matching Station values remain.
-    #
-    # ========================================================
+
 
     if station != "All":
 
@@ -448,17 +419,16 @@ def show_data_page(df):
         ]
 
 
-    # ========================================================
+ 
     # [09] APPLY DIVISION FILTER
-    # ========================================================
-    #
+   
+    
     # If the user selects "All":
     #     No filtering happens.
     #
     # Otherwise:
     #     Keep only rows belonging to the selected division.
-    #
-    # ========================================================
+ 
 
     if division != "All":
 
@@ -468,10 +438,10 @@ def show_data_page(df):
         ]
 
 
-    # ========================================================
+
     # [10] APPLY DATE FILTER
-    # ========================================================
-    #
+
+    
     # Streamlit date_input normally returns a tuple when a
     # date range is selected.
     #
@@ -479,16 +449,15 @@ def show_data_page(df):
     #
     #     Case 1 → Two dates selected
     #     Case 2 → One date selected
-    #
-    # ========================================================
 
 
-    # --------------------------------------------------------
+
+  
     # [10-A] DATE RANGE SELECTED
-    # --------------------------------------------------------
-    #
+  
+    
     # Example:
-    #
+    
     #     01/01/2025 → 31/01/2025
     #
     # The end date is increased by one day so that the entire
@@ -501,8 +470,7 @@ def show_data_page(df):
     #
     # This avoids accidentally excluding records on the
     # selected end date.
-    #
-    # --------------------------------------------------------
+
 
     if isinstance(dates, (tuple, list)):
 
@@ -526,14 +494,13 @@ def show_data_page(df):
             ]
 
 
-    # --------------------------------------------------------
+   
     # [10-B] SINGLE DATE SELECTED
-    # --------------------------------------------------------
-    #
+
+    
     # If Streamlit returns a single date instead of a range,
     # only records matching that exact date are displayed.
-    #
-    # --------------------------------------------------------
+  
 
     elif dates is not None:
 
@@ -546,10 +513,9 @@ def show_data_page(df):
         ]
 
 
-    # ========================================================
+   
     # [11] DISPLAY FILTERED DATA
-    # ========================================================
-    #
+
     # At this point:
     #
     #     x = cleaned + filtered dataset
@@ -558,27 +524,24 @@ def show_data_page(df):
     #
     #     1. Number of matching records
     #     2. Complete filtered dataframe
-    #
-    # ========================================================
 
 
-    # --------------------------------------------------------
+
     # [11-A] FILTERED RECORD COUNT
-    # --------------------------------------------------------
-    #
+
+    
     # Shows how many records remain after all selected filters.
-    #
-    # --------------------------------------------------------
+
 
     st.caption(
         f"Showing {len(x):,} records"
     )
 
 
-    # --------------------------------------------------------
+  
     # [11-B] DISPLAY DATA TABLE
-    # --------------------------------------------------------
-    #
+ 
+    
     # width="stretch":
     #     Uses the available page width.
     #
@@ -593,8 +556,7 @@ def show_data_page(df):
     # changed to:
     #
     #     x[["Date", "Station", "Division", "rain_sum"]]
-    #
-    # --------------------------------------------------------
+
 
     st.dataframe(
         x,
